@@ -182,6 +182,7 @@ void UI_show(){
         last_ui_state = ui_state;
         key_pressed = 0;
 
+        ssd1306_Fill(Black);
         // 顶部
         sprintf(buf, "Page%d", dip_switch);
         ssd1306_SetCursor(0, 0);

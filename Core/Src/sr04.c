@@ -43,7 +43,7 @@ void sr04_read_distance(sr04_t *sr04_struct){
       sr04_struct->distance = (end_counter - start_counter) * 340 / (SystemCoreClock / 1000000) / 2 / (1000 / sr04_struct->echo_htim->Init.Prescaler);
       // Out of range
       if(sr04_struct->distance > 5000){
-          sr04_struct->distance = 9999;
+          sr04_struct->distance = sr04_struct->last_distance;
       }
         // Low pass filter
       if(sr04_struct->use_lowpass_filter){
