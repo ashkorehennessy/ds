@@ -27,9 +27,9 @@ void uart_queue_clear()
 
 void Ser_pos_callback(Ser_pos *pos)
 {
-//    if(uart_queue[0] == SERCOM_HEAD1 && uart_queue[1] == SERCOM_HEAD2 && uart_queue[6] == SERCOM_TAIL1 && uart_queue[7] == SERCOM_TAIL2)
-//    {
+    if(uart_queue[0] == SERCOM_HEAD1 && uart_queue[1] == SERCOM_HEAD2 && uart_queue[6] == SERCOM_TAIL1 && uart_queue[7] == SERCOM_TAIL2)
+    {
         pos->X = (int16_t)(uart_queue[2] << 8 | uart_queue[3]);
         pos->Y = (int16_t)(uart_queue[4] << 8 | uart_queue[5]);
-//    }
+    }
 }

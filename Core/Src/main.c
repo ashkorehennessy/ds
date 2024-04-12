@@ -38,6 +38,7 @@
 #include "PID.h"
 #include "tasks.h"
 #include "sercom.h"
+#include "tfluna_i2c.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -68,6 +69,14 @@ uint32_t perf_time;
 double fan_speed = 0;
 PID_Incremental fan_pid;
 uint8_t sercom_rx_buf[8];
+
+
+
+TF_Luna_Lidar TF_Luna_1;
+// device variables passed back by getData
+int16_t  tfDist = 0 ;   // distance in centimeters
+int16_t  tfFlux = 0 ;   // signal quality in arbitrary units
+int16_t  tfTemp = 0 ;   // temperature in 0.01 degree Celsius
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -146,12 +155,15 @@ int main(void)
 //    setVcselPulsePeriod(VcselPeriodFinalRange, 12);
 //    setMeasurementTimingBudget(500 * 1000UL);
 
+
     // ·çÉÈ
     fan_init(&fan, &htim3, TIM_CHANNEL_3, TIM_CHANNEL_4);
     fan_pid = PID_Incremental_Init(2, 0.1f, 0.6f, 100, -100, 0, 0.5);
 
     // ´®¿Ú
     HAL_UART_Receive_IT(&huart2, sercom_rx_buf, 1);
+
+    TF_Luna_init(&TF_Luna_1, &hi2c2, 0x10); //0x10->7bit. 7bit Slave address has been already shifting to the left in the library.
 
     HAL_Delay(500);
 
@@ -163,6 +175,8 @@ int main(void)
   {
       uint32_t perf_start_time = HAL_GetTick();
 //      vl53l0x_distance = readRangeSingleMillimeters(&distanceStr);
+      getData(&TF_Luna_1, &tfDist, &tfFlux, &tfTemp);
+      tfDist -= 20;
         uint32_t perf_end_time = HAL_GetTick();
         perf_time = perf_end_time - perf_start_time;
       UI_show();

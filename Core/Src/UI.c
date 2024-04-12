@@ -24,6 +24,7 @@ int key_pressed = 0;
 extern uint16_t vl53l0x_distance;
 extern uint32_t perf_time;
 extern double fan_speed;
+extern int16_t  tfDist;
 
 
 void UI_item_init(UI_item *item, const char *name, int type, void *var_ptr) {
@@ -177,7 +178,7 @@ void UI_init(){
     UI_item_init(&items[6][4], "offst", FLOAT, &pos_offset);
     UI_item_init(&items[6][5], "convt", FLOAT, &pos_convert);
     UI_item_init(&items[5][0], "targt", FLOAT, &target_pos);
-    UI_item_init(&items[5][1], "vldis", UINT16, &vl53l0x_distance);
+    UI_item_init(&items[5][1], "tfdis", INT16, &tfDist);
     UI_item_init(&items[5][2], "run  ", UINT8, &task_running);
     UI_item_init(&items[5][3], "index", UINT8, &task_index);
     UI_item_init(&items[5][4], "input", INT32, &input_pos);
