@@ -23,6 +23,7 @@ typedef struct{
     float integral;
     float outmax;
     float outmin;
+    uint8_t use_integral;
     uint8_t use_lowpass_filter;
     float lowpass_filter_factor;
     float deadzone;
@@ -43,8 +44,8 @@ typedef struct{
     float lowpass_filter_factor;
 } PID_Incremental;
 
-PID_Base PID_Base_Init(float Kp, float Ki, float Kd, float outmax, float outmin, uint8_t use_lowpass_filter,
-                       float lowpass_filter_factor, float deadzone);
+PID_Base PID_Base_Init(float Kp, float Ki, float Kd, float outmax, float outmin, uint8_t use_integral,
+                       uint8_t use_lowpass_filter, float lowpass_filter_factor, float deadzone);
 
 float PID_Base_Calc(PID_Base *pid, float input_value, float setpoint);
 

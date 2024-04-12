@@ -158,7 +158,7 @@ int main(void)
     // ·çÉÈ
     fan_init(&fan, &htim3, TIM_CHANNEL_3, TIM_CHANNEL_4);
 //    fan_pid = PID_Incremental_Init(-0.05, -0.000025, -0, 55, -55, 0, 0.5);
-fan_pid = PID_Base_Init(-0.1, -0.0003, -4, 50, -50, 0, 0.5, 35);
+fan_pid = PID_Base_Init(-0.11, -0.00027, -3.5, 50, -50, 1, 0, 0.5, 37.5);
 
     // ´®¿Ú
     HAL_UART_Receive_IT(&huart2, sercom_rx_buf, 1);
@@ -196,6 +196,9 @@ fan_pid = PID_Base_Init(-0.1, -0.0003, -4, 50, -50, 0, 0.5, 35);
         case 4:
           task4();
           break;
+        case 5:
+        task5();
+        break;
         case 6:
           task6();
           break;

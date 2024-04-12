@@ -7,8 +7,8 @@
 
 #include "PID.h"
 
-PID_Base PID_Base_Init(float Kp, float Ki, float Kd, float outmax, float outmin, uint8_t use_lowpass_filter,
-                       float lowpass_filter_factor, float deadzone) {
+PID_Base PID_Base_Init(float Kp, float Ki, float Kd, float outmax, float outmin, uint8_t use_integral,
+                       uint8_t use_lowpass_filter, float lowpass_filter_factor, float deadzone) {
     PID_Base pid;
     pid.Kp = Kp;
     pid.Ki = Ki;
@@ -18,6 +18,7 @@ PID_Base PID_Base_Init(float Kp, float Ki, float Kd, float outmax, float outmin,
     pid.integral = 0;
     pid.outmax = outmax;
     pid.outmin = outmin;
+    pid.use_integral = use_integral;
     pid.use_lowpass_filter = use_lowpass_filter;
     pid.lowpass_filter_factor = lowpass_filter_factor;
     pid.deadzone = deadzone;
@@ -27,7 +28,9 @@ PID_Base PID_Base_Init(float Kp, float Ki, float Kd, float outmax, float outmin,
 float PID_Base_Calc(PID_Base *pid, float input_value, float setpoint){
     float error = setpoint - input_value;
     float derivative = error - pid->last_error;
-    pid->integral += error;
+    if(pid->use_integral) {
+        pid->integral += error;
+    }
     pid->last_error = error;
     float output = pid->Kp * error + pid->Ki * pid->integral + pid->Kd * derivative;
     pid->last_out = output;
