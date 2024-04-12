@@ -11,7 +11,8 @@
 #include "mpu6050.h"
 #include "sr04.h"
 #include "IR.h"
-#include "IR.h"
+#include "tasks.h"
+#include "sercom.h"
 
 char buf[32];
 UI_item items[8][SCREEN_H / FONT_H - 1];
@@ -22,6 +23,7 @@ int ui_state = 0;  // 0:移动光标 1:修改数值 2:修改数值的指数
 int key_pressed = 0;
 extern uint16_t vl53l0x_distance;
 extern uint32_t perf_time;
+extern double fan_speed;
 
 
 void UI_item_init(UI_item *item, const char *name, int type, void *var_ptr) {
@@ -164,10 +166,24 @@ void UI_init(){
     UI_item_init(&items[7][0], "AngX ", DOUBLE, &mpu6050.KalmanAngleX);
     UI_item_init(&items[7][1], "AngY ", DOUBLE, &mpu6050.KalmanAngleY);
     UI_item_init(&items[7][2], "AngZ ", DOUBLE, &mpu6050.AngleZ);
-    UI_item_init(&items[7][3], "sr04 ", UINT32, &sr04.distance);
+    UI_item_init(&items[7][3], "fan  ", DOUBLE, &fan_speed);
     UI_item_init(&items[7][4], "vldis", UINT16, &vl53l0x_distance);
     UI_item_init(&items[7][5], "time ", UINT32, &perf_time);
     UI_item_init(&items[7][6], "IR   ", INT32, &ir.state);
+    UI_item_init(&items[6][0], "Apos ", FLOAT, &A_pos);
+    UI_item_init(&items[6][1], "Bpos ", FLOAT, &B_pos);
+    UI_item_init(&items[6][2], "Cpos ", FLOAT, &C_pos);
+    UI_item_init(&items[6][3], "Dpos ", FLOAT, &D_pos);
+    UI_item_init(&items[6][4], "offst", FLOAT, &pos_offset);
+    UI_item_init(&items[6][5], "convt", FLOAT, &pos_convert);
+    UI_item_init(&items[5][0], "targt", FLOAT, &target_pos);
+    UI_item_init(&items[5][1], "vldis", UINT16, &vl53l0x_distance);
+    UI_item_init(&items[5][2], "run  ", UINT8, &task_running);
+    UI_item_init(&items[5][3], "index", UINT8, &task_index);
+    UI_item_init(&items[5][4], "input", INT32, &input_pos);
+    UI_item_init(&items[5][5], "serX ", INT16, &ser_pos.X);
+    UI_item_init(&items[5][6], "serY ", INT16, &ser_pos.Y);
+
 }
 
 void UI_show(){
@@ -302,6 +318,7 @@ void UI_key_process(){
     if(KEY_BACK && !key_back_pressed){
         key_back_pressed = 1;
         key_pressed = 1;
+        task_running = 1;
     } else if(!KEY_BACK && key_back_pressed){
         key_back_pressed = 0;
     }

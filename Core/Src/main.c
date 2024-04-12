@@ -34,7 +34,10 @@
 #include "VL53L0X.h"
 #include "stepmotor.h"
 #include "delay_us.h"
-#include "smallstepmotor.h"
+#include "fan.h"
+#include "PID.h"
+#include "tasks.h"
+#include "sercom.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -62,6 +65,9 @@ int stepmotor_music_delay = 250;
 int stepmotor_music_frequency[15] = {0, 523, 587, 659, 698, 783, 880, 987, 1046, 1175, 1319, 1397, 1568, 1760, 1976};
 int stepmotor_music_note[stepmotor_music_notes] = {2,3,4,5,6,6,6,6,4,6,4,3,2,2,2, 2, 0, 2, 5, 6, 9, 9, 9, 9, 8, 9, 8, 5, 6, 6, 6, 0};
 uint32_t perf_time;
+double fan_speed = 0;
+PID_Incremental fan_pid;
+uint8_t sercom_rx_buf[8];
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -112,9 +118,6 @@ int main(void)
   MX_TIM3_Init();
   /* USER CODE BEGIN 2 */
 
-//    // mpu6050螺仪
-//    MPU6050_Init(&hi2c2);
-//
 //    // ssd1306显示
     ssd1306_Init();
 
@@ -122,36 +125,33 @@ int main(void)
     UI_init();
 //
     // sr04超声测距
-    sr04.trig_port = GPIOA;
-    sr04.trig_pin = GPIO_PIN_9;
-    sr04.echo_htim = &htim1;
-    sr04.echo_channel = TIM_CHANNEL_1;
-    sr04.use_lowpass_filter = 1;
-    sr04.lowpass_factor = 0.3f;
-    sr04_init(&sr04);
-//
-//    // Pcounter光电计数
-//    IR_init(&ir, GPIOA, GPIO_PIN_4);
-//
-//    // IR红外
-//    IR_init(&ir, GPIOA, GPIO_PIN_0);
+//    sr04.trig_port = GPIOA;
+//    sr04.trig_pin = GPIO_PIN_9;
+//    sr04.echo_htim = &htim1;
+//    sr04.echo_channel = TIM_CHANNEL_1;
+//    sr04.use_lowpass_filter = 1;
+//    sr04.lowpass_factor = 0.3f;
+//    sr04_init(&sr04);
 
-    // 步进电机
-//    StepMotor_gpio_init(&stepmotor_gpio, GPIOB, GPIO_PIN_6, GPIOB, GPIO_PIN_7);
-//    StepMotor_pwm_init(&stepmotor_pwm, GPIOB, GPIO_PIN_5, &htim3, TIM_CHANNEL_1);
-//    smallstepmotor_gpio_init(&smallstepmotor_gpio, GPIOB, GPIO_PIN_4, GPIOB, GPIO_PIN_5, GPIOB, GPIO_PIN_6, GPIOB, GPIO_PIN_7);
     // tim定时器
     HAL_TIM_Base_Start_IT(&htim1);
 //    HAL_TIM_Base_Start_IT(&htim4);
 
     // vl53l0x tof
-    initVL53L0X(1, &hi2c2);
+//    initVL53L0X(1, &hi2c2);
+//
+//    // Configure the sensor for high accuracy and speed in 20 cm.
+//    setSignalRateLimit(200);
+//    setVcselPulsePeriod(VcselPeriodPreRange, 6);
+//    setVcselPulsePeriod(VcselPeriodFinalRange, 12);
+//    setMeasurementTimingBudget(500 * 1000UL);
 
-    // Configure the sensor for high accuracy and speed in 20 cm.
-    setSignalRateLimit(200);
-    setVcselPulsePeriod(VcselPeriodPreRange, 6);
-    setVcselPulsePeriod(VcselPeriodFinalRange, 12);
-    setMeasurementTimingBudget(500 * 1000UL);
+    // 风扇
+    fan_init(&fan, &htim3, TIM_CHANNEL_3, TIM_CHANNEL_4);
+    fan_pid = PID_Incremental_Init(2, 0.1f, 0.6f, 100, -100, 0, 0.5);
+
+    // 串口
+    HAL_UART_Receive_IT(&huart2, sercom_rx_buf, 1);
 
     HAL_Delay(500);
 
@@ -162,24 +162,41 @@ int main(void)
   while (1)
   {
       uint32_t perf_start_time = HAL_GetTick();
-      vl53l0x_distance = readRangeSingleMillimeters(&distanceStr);
+//      vl53l0x_distance = readRangeSingleMillimeters(&distanceStr);
         uint32_t perf_end_time = HAL_GetTick();
         perf_time = perf_end_time - perf_start_time;
-      sr04_trigger(&sr04);
       UI_show();
       UI_key_process();
-//      StepMotor_gpio_run(&stepmotor_gpio, 500, 3000);
-//      for(int i = 5; i < 500; i++){
-//          StepMotor_pwm_change_frequency(&stepmotor_pwm, stepmotor_music_frequency[stepmotor_music_note[i]]);
-//          HAL_Delay(stepmotor_music_delay);
-////          smallstepmotor_gpio_run(&smallstepmotor_gpio, 50, i);
-//      }
-//      HAL_Delay(2000);
+      if(task_running == 1){
+        switch (task_index) {
+        case 1:
+          task1();
+          break;
+        case 2:
+          task2();
+          break;
+        case 3:
+          task3(input_pos);
+          break;
+        case 4:
+          task4();
+          break;
+        case 6:
+          task6();
+          break;
+        }
+      }
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
+}
+
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
+    uart_queue_push(sercom_rx_buf[0]);
+    Ser_pos_callback(&ser_pos);
+    HAL_UART_Receive_IT(&huart2, sercom_rx_buf, 1);
 }
 
 /**

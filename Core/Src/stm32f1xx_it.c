@@ -27,6 +27,10 @@
 #include "IR.h"
 #include "IR.h"
 #include "VL53L0X.h"
+#include "tasks.h"
+#include "fan.h"
+#include "PID.h"
+#include "sercom.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -62,10 +66,12 @@
 /* External variables --------------------------------------------------------*/
 extern TIM_HandleTypeDef htim1;
 extern TIM_HandleTypeDef htim4;
+extern UART_HandleTypeDef huart2;
 /* USER CODE BEGIN EV */
 extern uint16_t vl53l0x_distance;
 extern statInfo_t_VL53L0X distanceStr;
-
+extern PID_Incremental fan_pid;
+extern uint8_t sercom_rx_buf[8];
 /* USER CODE END EV */
 
 /******************************************************************************/
@@ -254,14 +260,30 @@ void TIM1_CC_IRQHandler(void)
 void TIM4_IRQHandler(void)
 {
   /* USER CODE BEGIN TIM4_IRQn 0 */
-    MPU6050_Read_All(&hi2c2, &mpu6050);
-    IR_get_frequency(&ir);
-    IR_get_state(&ir);
+  if(task_running == 1){
+      float speed = PID_Incremental_Calc(&fan_pid, vl53l0x_distance, target_pos);
+      fan_set_speed(&fan, speed);
+  } else {
+        fan_set_speed(&fan, 0);
+  }
   /* USER CODE END TIM4_IRQn 0 */
   HAL_TIM_IRQHandler(&htim4);
   /* USER CODE BEGIN TIM4_IRQn 1 */
 
   /* USER CODE END TIM4_IRQn 1 */
+}
+
+/**
+  * @brief This function handles USART2 global interrupt.
+  */
+void USART2_IRQHandler(void)
+{
+  /* USER CODE BEGIN USART2_IRQn 0 */
+  /* USER CODE END USART2_IRQn 0 */
+  HAL_UART_IRQHandler(&huart2);
+  /* USER CODE BEGIN USART2_IRQn 1 */
+
+  /* USER CODE END USART2_IRQn 1 */
 }
 
 /* USER CODE BEGIN 1 */
