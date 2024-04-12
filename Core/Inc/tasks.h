@@ -17,12 +17,13 @@ extern float target_pos;
 extern uint8_t task_running;
 extern uint8_t task_index;
 extern int input_pos;
+extern uint32_t keep_time;
 
 int task1();
 
 int task2();
 
-int task3(int input_pos);
+int task3(int _input_pos);
 
 int task4();
 

@@ -59,7 +59,7 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-uint16_t vl53l0x_distance;
+uint16_t tof_distance;
 statInfo_t_VL53L0X distanceStr;
 #define stepmotor_music_notes 32
 int stepmotor_music_delay = 250;
@@ -67,7 +67,9 @@ int stepmotor_music_frequency[15] = {0, 523, 587, 659, 698, 783, 880, 987, 1046,
 int stepmotor_music_note[stepmotor_music_notes] = {2,3,4,5,6,6,6,6,4,6,4,3,2,2,2, 2, 0, 2, 5, 6, 9, 9, 9, 9, 8, 9, 8, 5, 6, 6, 6, 0};
 uint32_t perf_time;
 double fan_speed = 0;
-PID_Incremental fan_pid;
+//PID_Incremental fan_pid;
+PID_Base fan_pid;
+float pidout;
 uint8_t sercom_rx_buf[8];
 
 
@@ -142,9 +144,6 @@ int main(void)
 //    sr04.lowpass_factor = 0.3f;
 //    sr04_init(&sr04);
 
-    // tim定时器
-    HAL_TIM_Base_Start_IT(&htim1);
-//    HAL_TIM_Base_Start_IT(&htim4);
 
     // vl53l0x tof
 //    initVL53L0X(1, &hi2c2);
@@ -158,13 +157,17 @@ int main(void)
 
     // 风扇
     fan_init(&fan, &htim3, TIM_CHANNEL_3, TIM_CHANNEL_4);
-    fan_pid = PID_Incremental_Init(2, 0.1f, 0.6f, 100, -100, 0, 0.5);
+//    fan_pid = PID_Incremental_Init(-0.05, -0.000025, -0, 55, -55, 0, 0.5);
+fan_pid = PID_Base_Init(-0.1, -0.0003, -4, 50, -50, 0, 0.5, 35);
 
     // 串口
     HAL_UART_Receive_IT(&huart2, sercom_rx_buf, 1);
 
     TF_Luna_init(&TF_Luna_1, &hi2c2, 0x10); //0x10->7bit. 7bit Slave address has been already shifting to the left in the library.
 
+    // tim定时器
+    HAL_TIM_Base_Start_IT(&htim1);
+    HAL_TIM_Base_Start_IT(&htim4);
     HAL_Delay(500);
 
   /* USER CODE END 2 */
@@ -174,9 +177,7 @@ int main(void)
   while (1)
   {
       uint32_t perf_start_time = HAL_GetTick();
-//      vl53l0x_distance = readRangeSingleMillimeters(&distanceStr);
-      getData(&TF_Luna_1, &tfDist, &tfFlux, &tfTemp);
-      tfDist -= 20;
+//      tof_distance = readRangeSingleMillimeters(&distanceStr);
         uint32_t perf_end_time = HAL_GetTick();
         perf_time = perf_end_time - perf_start_time;
       UI_show();

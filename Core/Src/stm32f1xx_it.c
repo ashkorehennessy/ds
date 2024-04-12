@@ -31,6 +31,7 @@
 #include "fan.h"
 #include "PID.h"
 #include "sercom.h"
+#include "tfluna_i2c.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -50,7 +51,6 @@
 
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN PV */
-
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -68,10 +68,17 @@ extern TIM_HandleTypeDef htim1;
 extern TIM_HandleTypeDef htim4;
 extern UART_HandleTypeDef huart2;
 /* USER CODE BEGIN EV */
-extern uint16_t vl53l0x_distance;
+extern uint16_t tof_distance;
 extern statInfo_t_VL53L0X distanceStr;
-extern PID_Incremental fan_pid;
+//extern PID_Incremental fan_pid;
+extern PID_Base fan_pid;
 extern uint8_t sercom_rx_buf[8];
+extern TF_Luna_Lidar TF_Luna_1;
+extern int16_t  tfDist  ;   // distance in centimeters
+extern int16_t  tfFlux  ;   // signal quality in arbitrary units
+extern int16_t  tfTemp  ;   // temperature in 0.01 degree Celsius
+extern double fan_speed;
+extern float pidout;
 /* USER CODE END EV */
 
 /******************************************************************************/
@@ -260,12 +267,16 @@ void TIM1_CC_IRQHandler(void)
 void TIM4_IRQHandler(void)
 {
   /* USER CODE BEGIN TIM4_IRQn 0 */
+  tof_distance = tfDist;
+    getData(&TF_Luna_1, &tfDist, &tfFlux, &tfTemp);
   if(task_running == 1){
-      float speed = PID_Incremental_Calc(&fan_pid, vl53l0x_distance, target_pos);
-      fan_set_speed(&fan, speed);
+//      pidout = PID_Incremental_Calc(&fan_pid, tof_distance, target_pos);
+      pidout = PID_Base_Calc(&fan_pid, tof_distance, target_pos);
+      fan_set_speed(&fan, pidout);
   } else {
         fan_set_speed(&fan, 0);
   }
+//    fan_set_speed(&fan, fan_speed);
   /* USER CODE END TIM4_IRQn 0 */
   HAL_TIM_IRQHandler(&htim4);
   /* USER CODE BEGIN TIM4_IRQn 1 */
