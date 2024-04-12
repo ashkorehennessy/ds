@@ -28,6 +28,7 @@ extern double fan_speed;
 extern int16_t  tfDist;
 extern float pidout;
 extern PID_Incremental fan_pid;
+extern int convert_pos;
 
 
 void UI_item_init(UI_item *item, const char *name, int type, void *var_ptr) {
@@ -181,7 +182,7 @@ void UI_init(){
     UI_item_init(&items[6][4], "offst", FLOAT, &pos_offset);
     UI_item_init(&items[5][0], "targt", FLOAT, &target_pos);
     UI_item_init(&items[5][1], "tfdis", INT16, &tfDist);
-    UI_item_init(&items[5][2], "run  ", UINT8, &task_running);
+    UI_item_init(&items[5][2], "pos  ", INT32, &convert_pos);
     UI_item_init(&items[5][3], "index", UINT8, &task_index);
     UI_item_init(&items[5][4], "input", INT32, &input_pos);
     UI_item_init(&items[5][5], "keept", UINT32, &keep_time);

@@ -79,6 +79,10 @@ TF_Luna_Lidar TF_Luna_1;
 int16_t  tfDist = 0 ;   // distance in centimeters
 int16_t  tfFlux = 0 ;   // signal quality in arbitrary units
 int16_t  tfTemp = 0 ;   // temperature in 0.01 degree Celsius
+
+
+int tube_max = 54;
+int convert_pos = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -180,6 +184,7 @@ fan_pid = PID_Base_Init(-0.11, -0.00027, -3.5, 50, -50, 1, 0, 0.5, 37.5);
 //      tof_distance = readRangeSingleMillimeters(&distanceStr);
         uint32_t perf_end_time = HAL_GetTick();
         perf_time = perf_end_time - perf_start_time;
+        convert_pos = tube_max - tof_distance;
       UI_show();
       UI_key_process();
       if(task_running == 1){
