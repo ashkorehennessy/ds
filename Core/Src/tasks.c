@@ -5,14 +5,14 @@
 #include "tasks.h"
 #include "PID.h"
 
-float A_pos = 6;
-float B_pos = 21;
+float A_pos = 4;
+float B_pos = 17;
 float C_pos = 35;
-float D_pos = 50;
+float D_pos = 48;
 float pos_offset = 0;
 float target_pos = 0;
 uint8_t task_running = 0;
-uint8_t task_index = 5;
+uint8_t task_index = 6;
 int input_pos = 0;
 uint32_t keep_time = 0;
 
@@ -68,6 +68,7 @@ int task3(int _input_pos){
     //Take the coordinates of point C as 0cm and the coordinates of point B as 15cm; use the keyboard to set the height position of the ball (unit: cm). After starting, the ball should be stably at the specified height for more than 3 seconds.
 
     static uint32_t last_time = 0;
+    _input_pos = _input_pos * 18 / 15;
     target_pos = C_pos - _input_pos + pos_offset;
     uint32_t target_keep_time = 3000;
     if(tof_distance > target_pos - 2 && tof_distance < target_pos + 2){
@@ -103,7 +104,7 @@ int task4(){
         }
         target_pos = A_pos - 10;
     }
-    if(tof_distance < A_pos + 1){
+    if(tof_distance < A_pos + 2){
         keep_time += HAL_GetTick() - last_time;
     } else {
         keep_time = 0;
@@ -162,7 +163,7 @@ int task6(){
             target_pos = (A_pos + B_pos) / 2 + pos_offset;
         }
         target_pos = (A_pos + B_pos) / 2 + pos_offset;
-        uint32_t target_keep_time = 5000;
+        uint32_t target_keep_time = 4500;
         if(tof_distance < B_pos && tof_distance > A_pos){
             keep_time += HAL_GetTick() - last_time;
         } else {
@@ -176,7 +177,7 @@ int task6(){
         }
     } else if(task_state == 1){
         target_pos = (C_pos + D_pos) / 2 + pos_offset;
-        uint32_t target_keep_time = 5000;
+        uint32_t target_keep_time = 4500;
         if(tof_distance < D_pos && tof_distance > C_pos){
             keep_time += HAL_GetTick() - last_time;
         } else {
@@ -190,7 +191,7 @@ int task6(){
         }
     } else if(task_state == 2){
         target_pos = (A_pos + B_pos) / 2;
-        uint32_t target_keep_time = 5000;
+        uint32_t target_keep_time = 4500;
         if(tof_distance < B_pos && tof_distance > A_pos){
             keep_time += HAL_GetTick() - last_time;
         } else {
@@ -205,7 +206,7 @@ int task6(){
         }
     } else if(task_state == 3){
         target_pos = (C_pos + D_pos) / 2 + pos_offset;
-        uint32_t target_keep_time = 5000;
+        uint32_t target_keep_time = 4500;
         if(tof_distance < D_pos && tof_distance > C_pos){
             keep_time += HAL_GetTick() - last_time;
         } else {

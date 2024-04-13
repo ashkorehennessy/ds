@@ -39,6 +39,7 @@
 #include "tasks.h"
 #include "sercom.h"
 #include "tfluna_i2c.h"
+#include "beep.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -61,10 +62,13 @@
 /* USER CODE BEGIN PV */
 uint16_t tof_distance;
 statInfo_t_VL53L0X distanceStr;
-#define stepmotor_music_notes 32
+#define stepmotor_music_notes 35
+int last_time = 0;
 int stepmotor_music_delay = 250;
-int stepmotor_music_frequency[15] = {0, 523, 587, 659, 698, 783, 880, 987, 1046, 1175, 1319, 1397, 1568, 1760, 1976};
-int stepmotor_music_note[stepmotor_music_notes] = {2,3,4,5,6,6,6,6,4,6,4,3,2,2,2, 2, 0, 2, 5, 6, 9, 9, 9, 9, 8, 9, 8, 5, 6, 6, 6, 0};
+int stepmotor_music_frequency[16] = {0, 523, 587, 659, 698, 783, 880, 987, 1046, 1175, 1319, 1397, 1568, 1760, 1976, 2093};
+int stepmotor_music_cirno[stepmotor_music_notes] = {2, 3, 4, 5, 6, 6, 6, 6, 4, 6, 4, 3, 2, 2, 2, 2, 0, 2, 5, 6, 9, 9, 9, 9, 8, 9, 8, 5, 6, 6, 6, 0};
+int music1[stepmotor_music_notes] = { 10, 10, 12, 13, 13, 13, 12, 13, 12, 10, 9, 12, 10, 10, 10, 10, 10, 0, 10, 10, 12, 13, 13,13, 12, 13, 15, 14, 13,12,13,13,13, 0};
+int stepmotor_music_index = 0;
 uint32_t perf_time;
 double fan_speed = 0;
 //PID_Incremental fan_pid;
@@ -81,7 +85,7 @@ int16_t  tfFlux = 0 ;   // signal quality in arbitrary units
 int16_t  tfTemp = 0 ;   // temperature in 0.01 degree Celsius
 
 
-int tube_max = 54;
+int tube_max = 58;
 int convert_pos = 0;
 /* USER CODE END PV */
 
@@ -158,11 +162,13 @@ int main(void)
 //    setVcselPulsePeriod(VcselPeriodFinalRange, 12);
 //    setMeasurementTimingBudget(500 * 1000UL);
 
+    // beep
+    beep_init(&beep, &htim2, TIM_CHANNEL_1);
 
     // ·çÉÈ
     fan_init(&fan, &htim3, TIM_CHANNEL_3, TIM_CHANNEL_4);
 //    fan_pid = PID_Incremental_Init(-0.05, -0.000025, -0, 55, -55, 0, 0.5);
-fan_pid = PID_Base_Init(-0.11, -0.00027, -3.5, 50, -50, 1, 0, 0.5, 37.5);
+fan_pid = PID_Base_Init(-0.15, -0.0003, -4.5, 65, -65, 1, 0, 0.5, 39);
 
     // ´®¿Ú
     HAL_UART_Receive_IT(&huart2, sercom_rx_buf, 1);
@@ -180,6 +186,15 @@ fan_pid = PID_Base_Init(-0.11, -0.00027, -3.5, 50, -50, 1, 0, 0.5, 37.5);
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+      if(stepmotor_music_index >= stepmotor_music_notes){
+          stepmotor_music_index = 0;
+      }
+      beep_set_frequency(&beep, stepmotor_music_frequency[music1[stepmotor_music_index]]);
+//      beep_set_frequency(&beep,convert_pos * 100);
+      if(HAL_GetTick() - last_time > stepmotor_music_delay){
+          stepmotor_music_index++;
+          last_time = HAL_GetTick();
+      }
       uint32_t perf_start_time = HAL_GetTick();
 //      tof_distance = readRangeSingleMillimeters(&distanceStr);
         uint32_t perf_end_time = HAL_GetTick();
