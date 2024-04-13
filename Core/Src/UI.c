@@ -122,16 +122,16 @@ void UI_item_set_value(UI_item *item, double value) {
     }
 }
 
-void UI_item_show_name(UI_item *item, uint16_t x, uint16_t y) {
+void UI_item_show_name(UI_item *item, uint16_t x, uint16_t y, FontDef font) {
     if(item->type == EMPTY) {
         ssd1306_SetCursor(x, y);
-        ssd1306_WriteString("               ",Font_6x8,White);
+        ssd1306_WriteString("               ",font,White);
     }
     ssd1306_SetCursor(x, y);
-    ssd1306_WriteString(item->name, Font_6x8, White);
+    ssd1306_WriteString(item->name, font, White);
 }
 
-void UI_item_show_value(UI_item *item, uint16_t x, uint16_t y) {
+void UI_item_show_value(UI_item *item, uint16_t x, uint16_t y, FontDef font) {
     if(item->type == EMPTY) return;
     double value = UI_item_get_value(item);
     switch (item->type) {
@@ -158,7 +158,7 @@ void UI_item_show_value(UI_item *item, uint16_t x, uint16_t y) {
             break;
     }
     ssd1306_SetCursor(x, y);
-    ssd1306_WriteString(buf, Font_6x8, White);
+    ssd1306_WriteString(buf, font, White);
 }
 
 void UI_init(){
@@ -180,13 +180,18 @@ void UI_init(){
     UI_item_init(&items[6][2], "Cpos ", FLOAT, &C_pos);
     UI_item_init(&items[6][3], "Dpos ", FLOAT, &D_pos);
     UI_item_init(&items[6][4], "offst", FLOAT, &pos_offset);
+    UI_item_init(&items[6][4], "taskT", FLOAT, &task_running_time);
+    UI_item_init(&items[6][5], "tfdis", INT16, &tfDist);
     UI_item_init(&items[5][0], "targt", FLOAT, &target_pos);
     UI_item_init(&items[5][1], "tfdis", INT16, &tfDist);
-    UI_item_init(&items[5][2], "pos  ", INT32, &convert_pos);
+    UI_item_init(&items[5][2], "pos  ", FLOAT, &convert_pos);
     UI_item_init(&items[5][3], "index", UINT8, &task_index);
-    UI_item_init(&items[5][4], "input", INT32, &input_pos);
+    UI_item_init(&items[5][4], "input", FLOAT, &input_pos);
     UI_item_init(&items[5][5], "keept", UINT32, &keep_time);
     UI_item_init(&items[5][6], "pidO ", FLOAT, &pidout);
+
+    UI_item_init(&items[1][0], "Keep ", FLOAT, &keep_time_sec);
+    UI_item_init(&items[1][1], "High ", FLOAT, &convert_pos);
 
 }
 
@@ -232,14 +237,14 @@ void UI_show(){
         }
         // 显示名字
         for(int i = 0; i < SCREEN_H / FONT_H - 1; i++){
-            UI_item_show_name(&items[dip_switch][i], FONT_W, FONT_H * i + FONT_H);
+            UI_item_show_name(&items[dip_switch][i], FONT_W, FONT_H * i + FONT_H, Font_6x8);
         }
         ssd1306_UpdateScreen();
     }
 
     //显示值
     for(int i = 0; i < SCREEN_H / FONT_H - 1; i++){
-        UI_item_show_value(&items[dip_switch][i], SCREEN_W - FONT_W * 10, FONT_H * i + FONT_H);
+        UI_item_show_value(&items[dip_switch][i], SCREEN_W - FONT_W * 10, FONT_H * i + FONT_H, Font_6x8);
     }
 
     // 显示自定义部分
@@ -250,6 +255,11 @@ void UI_show(){
 
 void UI_show_custom_part(){
     switch (DIP_SWITCH){
+        case 1:
+            UI_item_show_value(&items[1][0], 17, 8, Font_11x18);
+            UI_item_show_value(&items[1][1], 17, 32, Font_11x18);
+            UI_item_show_name(&items[1][0], 6, 8, Font_11x18);
+            UI_item_show_name(&items[1][1], 6, 32, Font_11x18);
     }
 }
 
@@ -322,7 +332,13 @@ void UI_key_process(){
     if(KEY_BACK && !key_back_pressed){
         key_back_pressed = 1;
         key_pressed = 1;
-        task_running = 1;
+        if(task_running == 0) {
+            task_running = 1;
+            task_running_time = 0;
+            task_start_running_time = HAL_GetTick();
+        } else {
+            task_running = 0;
+        }
     } else if(!KEY_BACK && key_back_pressed){
         key_back_pressed = 0;
     }

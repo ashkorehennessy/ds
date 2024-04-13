@@ -12,9 +12,12 @@ float D_pos = 48;
 float pos_offset = 0;
 float target_pos = 0;
 uint8_t task_running = 0;
+float task_running_time = 0;
+float task_start_running_time = 0;
 uint8_t task_index = 6;
-int input_pos = 0;
+float input_pos = 0;
 uint32_t keep_time = 0;
+float keep_time_sec = 0;
 
 extern uint16_t tof_distance;
 extern PID_Base fan_pid;
@@ -25,7 +28,7 @@ int task1(){
 
     static uint32_t last_time = 0;
     target_pos = (B_pos + C_pos) / 2 + pos_offset;
-    uint32_t target_keep_time = 5000;
+    uint32_t target_keep_time = 6000;
     if(tof_distance > B_pos && tof_distance < C_pos){
         keep_time += HAL_GetTick() - last_time;
     } else {
@@ -47,7 +50,7 @@ int task2(){
 
     static uint32_t last_time = 0;
     target_pos = (B_pos + C_pos) / 2 + pos_offset;
-    uint32_t target_keep_time = 10000;
+    uint32_t target_keep_time = 100000;
     if(tof_distance > B_pos && tof_distance < C_pos){
         keep_time += HAL_GetTick() - last_time;
     } else {
@@ -64,13 +67,15 @@ int task2(){
     }
 }
 
-int task3(int _input_pos){
+int task3(float _input_pos){
     //Take the coordinates of point C as 0cm and the coordinates of point B as 15cm; use the keyboard to set the height position of the ball (unit: cm). After starting, the ball should be stably at the specified height for more than 3 seconds.
 
     static uint32_t last_time = 0;
-    _input_pos = _input_pos * 18 / 15;
+    if(_input_pos >= 0) {
+        _input_pos = _input_pos * 17 / 15;
+    }
     target_pos = C_pos - _input_pos + pos_offset;
-    uint32_t target_keep_time = 3000;
+    uint32_t target_keep_time = 5000;
     if(tof_distance > target_pos - 2 && tof_distance < target_pos + 2){
         keep_time += HAL_GetTick() - last_time;
     } else {
@@ -102,7 +107,7 @@ int task4(){
         if(HAL_GetTick() - task_start_time > 2300){
             fan_pid.use_integral = 0;
         }
-        target_pos = A_pos - 10;
+        target_pos = A_pos - 3;
     }
     if(tof_distance < A_pos + 2){
         keep_time += HAL_GetTick() - last_time;
@@ -163,7 +168,7 @@ int task6(){
             target_pos = (A_pos + B_pos) / 2 + pos_offset;
         }
         target_pos = (A_pos + B_pos) / 2 + pos_offset;
-        uint32_t target_keep_time = 4500;
+        uint32_t target_keep_time = 3700;
         if(tof_distance < B_pos && tof_distance > A_pos){
             keep_time += HAL_GetTick() - last_time;
         } else {
@@ -177,7 +182,7 @@ int task6(){
         }
     } else if(task_state == 1){
         target_pos = (C_pos + D_pos) / 2 + pos_offset;
-        uint32_t target_keep_time = 4500;
+        uint32_t target_keep_time = 3700;
         if(tof_distance < D_pos && tof_distance > C_pos){
             keep_time += HAL_GetTick() - last_time;
         } else {
@@ -191,7 +196,7 @@ int task6(){
         }
     } else if(task_state == 2){
         target_pos = (A_pos + B_pos) / 2;
-        uint32_t target_keep_time = 4500;
+        uint32_t target_keep_time = 3700;
         if(tof_distance < B_pos && tof_distance > A_pos){
             keep_time += HAL_GetTick() - last_time;
         } else {
@@ -206,7 +211,7 @@ int task6(){
         }
     } else if(task_state == 3){
         target_pos = (C_pos + D_pos) / 2 + pos_offset;
-        uint32_t target_keep_time = 4500;
+        uint32_t target_keep_time = 3700;
         if(tof_distance < D_pos && tof_distance > C_pos){
             keep_time += HAL_GetTick() - last_time;
         } else {
@@ -235,6 +240,130 @@ int task6(){
             task_start_time = 0;
             fan_pid.use_integral = 1;
             return 5;
+        }
+    }
+    return 0;
+}
+
+int task7(){
+    // The small ball is placed at the bottom of the round tube. Within 30 seconds after starting, the small ball is controlled to complete the following movements: upward to reach segment AB and maintain for 3 to 5 seconds, then downward to reach segment CD and maintain for 3 to 5 seconds; then upward to reach segment AB and maintain
+
+    static uint32_t last_time = 0;
+    static uint32_t task_start_time = 0;
+    static uint32_t task_end_time = 0;
+    static uint32_t task_time = 0;
+    static uint8_t task_state = 0;
+    static uint32_t part_start_time = 0;
+    if(task_state == 0){
+        if(part_start_time == 0){
+            part_start_time = HAL_GetTick();
+        }
+        if(HAL_GetTick() - part_start_time < 1200) {
+            target_pos = A_pos;
+        } else {
+            target_pos = (A_pos + B_pos) / 2 + pos_offset;
+        }
+        target_pos = (A_pos + B_pos) / 2 + pos_offset;
+        uint32_t target_keep_time = 2500;
+        if(tof_distance < B_pos && tof_distance > A_pos){
+            keep_time += HAL_GetTick() - last_time;
+        } else {
+            keep_time = 0;
+        }
+        last_time = HAL_GetTick();
+        if(keep_time > target_keep_time){
+            task_state = 1;
+            part_start_time = 0;
+            task_start_time = HAL_GetTick();
+        }
+    } else if(task_state == 1){
+        target_pos = (B_pos + C_pos) / 2 + pos_offset;
+        uint32_t target_keep_time = 2500;
+        if(tof_distance < C_pos && tof_distance > B_pos){
+            keep_time += HAL_GetTick() - last_time;
+        } else {
+            keep_time = 0;
+        }
+        last_time = HAL_GetTick();
+        if(keep_time > target_keep_time){
+            task_state = 2;
+            task_end_time = HAL_GetTick();
+            task_time = task_end_time - task_start_time;
+        }
+    } else if(task_state == 2){
+        target_pos = (D_pos + C_pos) / 2;
+        uint32_t target_keep_time = 2500;
+        if(tof_distance < D_pos && tof_distance > C_pos){
+            keep_time += HAL_GetTick() - last_time;
+        } else {
+            part_start_time = 0;
+            keep_time = 0;
+        }
+        last_time = HAL_GetTick();
+        if(keep_time > target_keep_time){
+            task_state = 3;
+            task_end_time = HAL_GetTick();
+            task_time = task_end_time - task_start_time;
+        }
+    } else if(task_state == 3){
+        target_pos = (B_pos + C_pos) / 2 + pos_offset;
+        uint32_t target_keep_time = 2500;
+        if(tof_distance < C_pos && tof_distance > B_pos){
+            keep_time += HAL_GetTick() - last_time;
+        } else {
+            keep_time = 0;
+        }
+        last_time = HAL_GetTick();
+        if(keep_time > target_keep_time){
+            task_state = 4;
+            task_end_time = HAL_GetTick();
+            task_time = task_end_time - task_start_time;
+        }
+    } else if(task_state == 4){
+        target_pos = (A_pos + B_pos) / 2 + pos_offset;
+        uint32_t target_keep_time = 2500;
+        if(tof_distance < B_pos && tof_distance > A_pos){
+            keep_time += HAL_GetTick() - last_time;
+        } else {
+            keep_time = 0;
+        }
+        last_time = HAL_GetTick();
+        if(keep_time > target_keep_time){
+            task_state = 5;
+            task_end_time = HAL_GetTick();
+            task_time = task_end_time - task_start_time;
+        }
+    } else if(task_state == 5){
+        target_pos = (B_pos + C_pos) / 2 + pos_offset;
+        uint32_t target_keep_time = 2500;
+        if(tof_distance < C_pos && tof_distance > B_pos){
+            keep_time += HAL_GetTick() - last_time;
+        } else {
+            keep_time = 0;
+        }
+        last_time = HAL_GetTick();
+        if(keep_time > target_keep_time){
+            task_state = 6;
+            task_end_time = HAL_GetTick();
+            task_time = task_end_time - task_start_time;
+        }
+    } else if(task_state == 6) {
+        target_pos = (D_pos + C_pos) / 2 + pos_offset;
+        uint32_t target_keep_time = 2500;
+        if(tof_distance < D_pos && tof_distance > C_pos){
+            keep_time += HAL_GetTick() - last_time;
+        } else {
+            keep_time = 0;
+        }
+        last_time = HAL_GetTick();
+        if (keep_time > target_keep_time) {
+            last_time = 0;
+            task_running = 0;
+            task_state = 0;
+            fan_pid.integral = 0;
+            task_start_time = 0;
+            fan_pid.use_integral = 1;
+            return 6;
         }
     }
     return 0;

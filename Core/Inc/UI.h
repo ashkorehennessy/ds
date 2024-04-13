@@ -7,6 +7,8 @@
 
 #include "stm32f1xx_hal.h"
 
+#include "ssd1306_fonts.h"
+
 #define FONT_W 6
 #define FONT_H 8
 #define SCREEN_W 128
@@ -54,9 +56,9 @@ void UI_item_set_value(UI_item *item, double value);
 
 double UI_item_get_value(UI_item *item);
 
-void UI_item_show_name(UI_item *item, uint16_t x, uint16_t y);
+void UI_item_show_name(UI_item *item, uint16_t x, uint16_t y, FontDef font);
 
-void UI_item_show_value(UI_item *item, uint16_t x, uint16_t y);
+void UI_item_show_value(UI_item *item, uint16_t x, uint16_t y, FontDef font);
 
 void UI_init();
 

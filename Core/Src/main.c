@@ -68,6 +68,8 @@ int stepmotor_music_delay = 250;
 int stepmotor_music_frequency[16] = {0, 523, 587, 659, 698, 783, 880, 987, 1046, 1175, 1319, 1397, 1568, 1760, 1976, 2093};
 int stepmotor_music_cirno[stepmotor_music_notes] = {2, 3, 4, 5, 6, 6, 6, 6, 4, 6, 4, 3, 2, 2, 2, 2, 0, 2, 5, 6, 9, 9, 9, 9, 8, 9, 8, 5, 6, 6, 6, 0};
 int music1[stepmotor_music_notes] = { 10, 10, 12, 13, 13, 13, 12, 13, 12, 10, 9, 12, 10, 10, 10, 10, 10, 0, 10, 10, 12, 13, 13,13, 12, 13, 15, 14, 13,12,13,13,13, 0};
+int music2[stepmotor_music_notes] = {8,8,8,8,8,8,8,0, 10, 11,0, 12, 13,13,0, 12, 0, 12,0,15,15,0};
+int music3[stepmotor_music_notes] = {3,3,4,5,5,5,4,3,2,1,1,2,3,3,2,2,0};
 int stepmotor_music_index = 0;
 uint32_t perf_time;
 double fan_speed = 0;
@@ -85,8 +87,10 @@ int16_t  tfFlux = 0 ;   // signal quality in arbitrary units
 int16_t  tfTemp = 0 ;   // temperature in 0.01 degree Celsius
 
 
-int tube_max = 58;
-int convert_pos = 0;
+float tube_max = 55.50;
+float convert_pos = 0;
+float last_convert_pos = 0;
+float convert_pos_in_second = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -178,7 +182,10 @@ fan_pid = PID_Base_Init(-0.15, -0.0003, -4.5, 65, -65, 1, 0, 0.5, 39);
     // tim¶¨Ê±Æ÷
     HAL_TIM_Base_Start_IT(&htim1);
     HAL_TIM_Base_Start_IT(&htim4);
-    HAL_Delay(500);
+//    for(stepmotor_music_index = 0; stepmotor_music_index < stepmotor_music_notes; stepmotor_music_index++){
+//        beep_set_frequency(&beep, stepmotor_music_frequency[music2[stepmotor_music_index]]);
+//        HAL_Delay(200);
+//    }
 
   /* USER CODE END 2 */
 
@@ -189,8 +196,15 @@ fan_pid = PID_Base_Init(-0.15, -0.0003, -4.5, 65, -65, 1, 0, 0.5, 39);
       if(stepmotor_music_index >= stepmotor_music_notes){
           stepmotor_music_index = 0;
       }
-      beep_set_frequency(&beep, stepmotor_music_frequency[music1[stepmotor_music_index]]);
-//      beep_set_frequency(&beep,convert_pos * 100);
+        if(task_index == 7 && task_running == 1) {
+            beep_set_frequency(&beep, stepmotor_music_frequency[(int) convert_pos / 5]);
+        } else {
+            if(keep_time > 0 && task_running == 1) {
+                beep_set_frequency(&beep, 500);
+            } else {
+                beep_set_frequency(&beep, 0);
+            }
+        }
       if(HAL_GetTick() - last_time > stepmotor_music_delay){
           stepmotor_music_index++;
           last_time = HAL_GetTick();
@@ -200,9 +214,13 @@ fan_pid = PID_Base_Init(-0.15, -0.0003, -4.5, 65, -65, 1, 0, 0.5, 39);
         uint32_t perf_end_time = HAL_GetTick();
         perf_time = perf_end_time - perf_start_time;
         convert_pos = tube_max - tof_distance;
+        convert_pos = convert_pos * 0.2 + last_convert_pos * 0.8;
+        last_convert_pos = convert_pos;
+        keep_time_sec = (float)keep_time / 1000.0;
       UI_show();
       UI_key_process();
       if(task_running == 1){
+          task_running_time = (HAL_GetTick() - task_start_running_time) / 1000;
         switch (task_index) {
         case 1:
           task1();
@@ -221,6 +239,9 @@ fan_pid = PID_Base_Init(-0.15, -0.0003, -4.5, 65, -65, 1, 0, 0.5, 39);
         break;
         case 6:
           task6();
+          break;
+            case 7:
+            task7();
           break;
         }
       }
