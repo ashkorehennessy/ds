@@ -62,7 +62,7 @@
 /* USER CODE BEGIN PV */
 uint16_t tof_distance;
 statInfo_t_VL53L0X distanceStr;
-#define stepmotor_music_notes 57
+#define stepmotor_music_notes 128
 int last_time = 0;
 int stepmotor_music_delay = 250;
 int stepmotor_music_frequency[16] = {0, 523, 587, 659, 698, 783, 880, 987, 1046, 1175, 1319, 1397, 1568, 1760, 1976, 2093};
@@ -70,7 +70,7 @@ int stepmotor_music_cirno[stepmotor_music_notes] = {2, 3, 4, 5, 6, 6, 6, 6, 4, 6
 int music1[stepmotor_music_notes] = { 10, 10, 12, 13, 13, 13, 12, 13, 12, 10, 9, 12, 10, 10, 10, 10, 10, 0, 10, 10, 12, 13, 13,13, 12, 13, 15, 14, 13,12,13,13,13, 0};
 int music2[stepmotor_music_notes] = {8,8,8,8,8,8,8,0, 10, 11,0, 12, 13,13,0, 12, 0, 12,0,15,15,0};
 int music3[stepmotor_music_notes] = {3,3,4,5,5,5,4,3,2,1,1,2,3,3,2,2,0};
-int music_senrenbanka[stepmotor_music_notes] = {10,12,13,13,12,13,10,10,10,10,10,13,13,12,13,12,10,10,9,9,10,12,13,13,10,10,9,8,9,10,6,6,6,6,10,10,9,10,6,6,6,6,6,9,9,10,9,8,8,9,10,10,10,10,10,10,10};
+int music_senrenbanka[stepmotor_music_notes] = {10,10,12,13,13,12,13,10,10,10,10,10,13,13,12,13,12,10,10,9,9,10,12,13,13,10,10,9,10,9,8,10,10,10,10,9,9,8,9,6,6,6,6,6,9,9,10,9,8,8,9,10,10,10,10,10,10,10,10,10,10,10,10,10,0,10,12,13,13,12,13,10,10,10,10,10,13,13,12,13,12,10,10,9,9,10,12,13,13,10,10,9,8,9,10,6,6,6,0,6,6,8,6,9,9,8,9,10,10,9,10,12,12,14,14,14,14,14,14,14,14,14,13,13,13,13,13,0};
 int stepmotor_music_index = 0;
 uint32_t perf_time;
 double fan_speed = 0;
@@ -169,6 +169,9 @@ int main(void)
 
     // beep
     beep_init(&beep, &htim2, TIM_CHANNEL_1);
+    beep_set_frequency(&beep, 500);
+    HAL_Delay(500);
+    beep_set_frequency(&beep, 0);
 
     // ∑Á…»
     fan_init(&fan, &htim3, TIM_CHANNEL_3, TIM_CHANNEL_4);

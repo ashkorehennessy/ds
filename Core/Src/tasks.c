@@ -24,7 +24,7 @@ extern uint16_t tof_distance;
 extern PID_Base fan_pid;
 extern float pidout;
 
-#define stepmotor_music_notes 35
+#define stepmotor_music_notes 128
 extern int stepmotor_music_delay;
 extern int stepmotor_music_frequency[16];
 extern int stepmotor_music_cirno[stepmotor_music_notes];
@@ -87,7 +87,7 @@ int task3(float _input_pos){
     }
     target_pos = C_pos - _input_pos + pos_offset;
     uint32_t target_keep_time = 5000;
-    if(tof_distance > target_pos - 2 && tof_distance < target_pos + 2){
+    if(tof_distance > target_pos - 1.5 && tof_distance < target_pos + 1.5){
         keep_time += HAL_GetTick() - last_time;
     } else {
         keep_time = 0;
@@ -264,8 +264,8 @@ int task7(){
     if(part_start_time == 0){
         part_start_time = HAL_GetTick();
     }
-    target_pos = 50 - (music_senrenbanka[stepmotor_music_index] * 3);
-    if(HAL_GetTick() - part_start_time > 200){
+    target_pos = 50 - (music_senrenbanka[stepmotor_music_index] * 5 - 30);
+    if(HAL_GetTick() - part_start_time > 180){
         beep_set_frequency(&beep, stepmotor_music_frequency[music_senrenbanka[stepmotor_music_index]]);
         part_start_time = 0;
         stepmotor_music_index++;
