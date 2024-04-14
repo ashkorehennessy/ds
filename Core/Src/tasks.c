@@ -4,6 +4,7 @@
 
 #include "tasks.h"
 #include "PID.h"
+#include "beep.h"
 
 float A_pos = 4;
 float B_pos = 17;
@@ -14,7 +15,7 @@ float target_pos = 0;
 uint8_t task_running = 0;
 float task_running_time = 0;
 float task_start_running_time = 0;
-uint8_t task_index = 6;
+uint8_t task_index = 7;
 float input_pos = 0;
 uint32_t keep_time = 0;
 float keep_time_sec = 0;
@@ -22,6 +23,16 @@ float keep_time_sec = 0;
 extern uint16_t tof_distance;
 extern PID_Base fan_pid;
 extern float pidout;
+
+#define stepmotor_music_notes 35
+extern int stepmotor_music_delay;
+extern int stepmotor_music_frequency[16];
+extern int stepmotor_music_cirno[stepmotor_music_notes];
+extern int music1[stepmotor_music_notes];
+extern int music2[stepmotor_music_notes];
+extern int music3[stepmotor_music_notes];
+extern int stepmotor_music_index;
+extern int music_senrenbanka[stepmotor_music_notes];
 
 int task1(){
     // keep ball between B and C above 5s
@@ -72,7 +83,7 @@ int task3(float _input_pos){
 
     static uint32_t last_time = 0;
     if(_input_pos >= 0) {
-        _input_pos = _input_pos * 17 / 15;
+        _input_pos = _input_pos * 17.4 / 15;
     }
     target_pos = C_pos - _input_pos + pos_offset;
     uint32_t target_keep_time = 5000;
@@ -104,10 +115,7 @@ int task4(){
     if(HAL_GetTick() - task_start_time < 800){
         target_pos = (A_pos + B_pos) / 2 + pos_offset;
     } else {
-        if(HAL_GetTick() - task_start_time > 2300){
-            fan_pid.use_integral = 0;
-        }
-        target_pos = A_pos - 3;
+        target_pos = A_pos - 5;
     }
     if(tof_distance < A_pos + 2){
         keep_time += HAL_GetTick() - last_time;
@@ -120,7 +128,6 @@ int task4(){
         last_time = 0;
         fan_pid.integral = 0;
         task_start_time = 0;
-        fan_pid.use_integral = 1;
         return 1;
     } else {
         return 0;
@@ -246,7 +253,7 @@ int task6(){
 }
 
 int task7(){
-    // The small ball is placed at the bottom of the round tube. Within 30 seconds after starting, the small ball is controlled to complete the following movements: upward to reach segment AB and maintain for 3 to 5 seconds, then downward to reach segment CD and maintain for 3 to 5 seconds; then upward to reach segment AB and maintain
+    // let ball follow the music to move
 
     static uint32_t last_time = 0;
     static uint32_t task_start_time = 0;
@@ -254,117 +261,23 @@ int task7(){
     static uint32_t task_time = 0;
     static uint8_t task_state = 0;
     static uint32_t part_start_time = 0;
-    if(task_state == 0){
-        if(part_start_time == 0){
-            part_start_time = HAL_GetTick();
-        }
-        if(HAL_GetTick() - part_start_time < 1200) {
-            target_pos = A_pos;
-        } else {
-            target_pos = (A_pos + B_pos) / 2 + pos_offset;
-        }
-        target_pos = (A_pos + B_pos) / 2 + pos_offset;
-        uint32_t target_keep_time = 2500;
-        if(tof_distance < B_pos && tof_distance > A_pos){
-            keep_time += HAL_GetTick() - last_time;
-        } else {
-            keep_time = 0;
-        }
-        last_time = HAL_GetTick();
-        if(keep_time > target_keep_time){
-            task_state = 1;
-            part_start_time = 0;
-            task_start_time = HAL_GetTick();
-        }
-    } else if(task_state == 1){
-        target_pos = (B_pos + C_pos) / 2 + pos_offset;
-        uint32_t target_keep_time = 2500;
-        if(tof_distance < C_pos && tof_distance > B_pos){
-            keep_time += HAL_GetTick() - last_time;
-        } else {
-            keep_time = 0;
-        }
-        last_time = HAL_GetTick();
-        if(keep_time > target_keep_time){
-            task_state = 2;
-            task_end_time = HAL_GetTick();
-            task_time = task_end_time - task_start_time;
-        }
-    } else if(task_state == 2){
-        target_pos = (D_pos + C_pos) / 2;
-        uint32_t target_keep_time = 2500;
-        if(tof_distance < D_pos && tof_distance > C_pos){
-            keep_time += HAL_GetTick() - last_time;
-        } else {
-            part_start_time = 0;
-            keep_time = 0;
-        }
-        last_time = HAL_GetTick();
-        if(keep_time > target_keep_time){
-            task_state = 3;
-            task_end_time = HAL_GetTick();
-            task_time = task_end_time - task_start_time;
-        }
-    } else if(task_state == 3){
-        target_pos = (B_pos + C_pos) / 2 + pos_offset;
-        uint32_t target_keep_time = 2500;
-        if(tof_distance < C_pos && tof_distance > B_pos){
-            keep_time += HAL_GetTick() - last_time;
-        } else {
-            keep_time = 0;
-        }
-        last_time = HAL_GetTick();
-        if(keep_time > target_keep_time){
-            task_state = 4;
-            task_end_time = HAL_GetTick();
-            task_time = task_end_time - task_start_time;
-        }
-    } else if(task_state == 4){
-        target_pos = (A_pos + B_pos) / 2 + pos_offset;
-        uint32_t target_keep_time = 2500;
-        if(tof_distance < B_pos && tof_distance > A_pos){
-            keep_time += HAL_GetTick() - last_time;
-        } else {
-            keep_time = 0;
-        }
-        last_time = HAL_GetTick();
-        if(keep_time > target_keep_time){
-            task_state = 5;
-            task_end_time = HAL_GetTick();
-            task_time = task_end_time - task_start_time;
-        }
-    } else if(task_state == 5){
-        target_pos = (B_pos + C_pos) / 2 + pos_offset;
-        uint32_t target_keep_time = 2500;
-        if(tof_distance < C_pos && tof_distance > B_pos){
-            keep_time += HAL_GetTick() - last_time;
-        } else {
-            keep_time = 0;
-        }
-        last_time = HAL_GetTick();
-        if(keep_time > target_keep_time){
-            task_state = 6;
-            task_end_time = HAL_GetTick();
-            task_time = task_end_time - task_start_time;
-        }
-    } else if(task_state == 6) {
-        target_pos = (D_pos + C_pos) / 2 + pos_offset;
-        uint32_t target_keep_time = 2500;
-        if(tof_distance < D_pos && tof_distance > C_pos){
-            keep_time += HAL_GetTick() - last_time;
-        } else {
-            keep_time = 0;
-        }
-        last_time = HAL_GetTick();
-        if (keep_time > target_keep_time) {
-            last_time = 0;
-            task_running = 0;
-            task_state = 0;
-            fan_pid.integral = 0;
-            task_start_time = 0;
-            fan_pid.use_integral = 1;
-            return 6;
-        }
+    if(part_start_time == 0){
+        part_start_time = HAL_GetTick();
+    }
+    target_pos = 50 - (music_senrenbanka[stepmotor_music_index] * 3);
+    if(HAL_GetTick() - part_start_time > 200){
+        beep_set_frequency(&beep, stepmotor_music_frequency[music_senrenbanka[stepmotor_music_index]]);
+        part_start_time = 0;
+        stepmotor_music_index++;
+    }
+    if (stepmotor_music_index >= stepmotor_music_notes) {
+        last_time = 0;
+        task_running = 0;
+        task_state = 0;
+        fan_pid.integral = 0;
+        task_start_time = 0;
+        stepmotor_music_index = 0;
+        return 6;
     }
     return 0;
 }

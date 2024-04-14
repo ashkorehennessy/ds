@@ -27,7 +27,7 @@ extern uint32_t perf_time;
 extern double fan_speed;
 extern int16_t  tfDist;
 extern float pidout;
-extern PID_Incremental fan_pid;
+extern PID_Base fan_pid;
 extern int convert_pos;
 
 
@@ -338,6 +338,7 @@ void UI_key_process(){
             task_start_running_time = HAL_GetTick();
         } else {
             task_running = 0;
+            fan_pid.integral = 0;
         }
     } else if(!KEY_BACK && key_back_pressed){
         key_back_pressed = 0;

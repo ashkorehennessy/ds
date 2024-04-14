@@ -62,7 +62,7 @@
 /* USER CODE BEGIN PV */
 uint16_t tof_distance;
 statInfo_t_VL53L0X distanceStr;
-#define stepmotor_music_notes 35
+#define stepmotor_music_notes 57
 int last_time = 0;
 int stepmotor_music_delay = 250;
 int stepmotor_music_frequency[16] = {0, 523, 587, 659, 698, 783, 880, 987, 1046, 1175, 1319, 1397, 1568, 1760, 1976, 2093};
@@ -70,6 +70,7 @@ int stepmotor_music_cirno[stepmotor_music_notes] = {2, 3, 4, 5, 6, 6, 6, 6, 4, 6
 int music1[stepmotor_music_notes] = { 10, 10, 12, 13, 13, 13, 12, 13, 12, 10, 9, 12, 10, 10, 10, 10, 10, 0, 10, 10, 12, 13, 13,13, 12, 13, 15, 14, 13,12,13,13,13, 0};
 int music2[stepmotor_music_notes] = {8,8,8,8,8,8,8,0, 10, 11,0, 12, 13,13,0, 12, 0, 12,0,15,15,0};
 int music3[stepmotor_music_notes] = {3,3,4,5,5,5,4,3,2,1,1,2,3,3,2,2,0};
+int music_senrenbanka[stepmotor_music_notes] = {10,12,13,13,12,13,10,10,10,10,10,13,13,12,13,12,10,10,9,9,10,12,13,13,10,10,9,8,9,10,6,6,6,6,10,10,9,10,6,6,6,6,6,9,9,10,9,8,8,9,10,10,10,10,10,10,10};
 int stepmotor_music_index = 0;
 uint32_t perf_time;
 double fan_speed = 0;
@@ -87,7 +88,7 @@ int16_t  tfFlux = 0 ;   // signal quality in arbitrary units
 int16_t  tfTemp = 0 ;   // temperature in 0.01 degree Celsius
 
 
-float tube_max = 55.50;
+float tube_max = 55.20;
 float convert_pos = 0;
 float last_convert_pos = 0;
 float convert_pos_in_second = 0;
@@ -172,7 +173,7 @@ int main(void)
     // ·çÉÈ
     fan_init(&fan, &htim3, TIM_CHANNEL_3, TIM_CHANNEL_4);
 //    fan_pid = PID_Incremental_Init(-0.05, -0.000025, -0, 55, -55, 0, 0.5);
-fan_pid = PID_Base_Init(-0.15, -0.0003, -4.5, 65, -65, 1, 0, 0.5, 39);
+fan_pid = PID_Base_Init(-0.3, -0.0003, -8, 65, -65, 1, 0, 0.5, 39);
 
     // ´®¿Ú
     HAL_UART_Receive_IT(&huart2, sercom_rx_buf, 1);
@@ -197,7 +198,7 @@ fan_pid = PID_Base_Init(-0.15, -0.0003, -4.5, 65, -65, 1, 0, 0.5, 39);
           stepmotor_music_index = 0;
       }
         if(task_index == 7 && task_running == 1) {
-            beep_set_frequency(&beep, stepmotor_music_frequency[(int) convert_pos / 5]);
+            // do nothing
         } else {
             if(keep_time > 0 && task_running == 1) {
                 beep_set_frequency(&beep, 500);
@@ -205,9 +206,10 @@ fan_pid = PID_Base_Init(-0.15, -0.0003, -4.5, 65, -65, 1, 0, 0.5, 39);
                 beep_set_frequency(&beep, 0);
             }
         }
-      if(HAL_GetTick() - last_time > stepmotor_music_delay){
-          stepmotor_music_index++;
-          last_time = HAL_GetTick();
+      if(tfDist > 55){
+          fan_pid.use_integral = 0;
+      } else {
+            fan_pid.use_integral = 1;
       }
       uint32_t perf_start_time = HAL_GetTick();
 //      tof_distance = readRangeSingleMillimeters(&distanceStr);
@@ -219,6 +221,19 @@ fan_pid = PID_Base_Init(-0.15, -0.0003, -4.5, 65, -65, 1, 0, 0.5, 39);
         keep_time_sec = (float)keep_time / 1000.0;
       UI_show();
       UI_key_process();
+      if(task_index == 2) {
+          fan_pid.Kp = -0.5;
+          fan_pid.Ki = -0.0002;
+          fan_pid.Kd = -10;
+      } else if(task_index == 3){
+          fan_pid.Kp = -0.1;
+          fan_pid.Ki = -0.0004;
+            fan_pid.Kd = -2;
+      } else {
+            fan_pid.Kp = -0.3;
+            fan_pid.Ki = -0.0006;
+            fan_pid.Kd = -8;
+      }
       if(task_running == 1){
           task_running_time = (HAL_GetTick() - task_start_running_time) / 1000;
         switch (task_index) {
