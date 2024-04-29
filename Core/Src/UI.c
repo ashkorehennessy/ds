@@ -14,6 +14,7 @@
 #include "tasks.h"
 #include "sercom.h"
 #include "PID.h"
+#include "irtm.h"
 
 char buf[32];
 UI_item items[8][SCREEN_H / FONT_H - 1];
@@ -29,6 +30,7 @@ extern int16_t  tfDist;
 extern float pidout;
 extern PID_Base fan_pid;
 extern int convert_pos;
+extern uint8_t key;
 
 
 void UI_item_init(UI_item *item, const char *name, int type, void *var_ptr) {
@@ -65,6 +67,9 @@ void UI_item_init(UI_item *item, const char *name, int type, void *var_ptr) {
         case FUNC:
             item->var_p.func_p = var_ptr;
             break;
+        case CHAR:
+            item->var_p.char_p = (char *) var_ptr;
+            break;
     }
 }
 
@@ -88,6 +93,8 @@ double UI_item_get_value(UI_item *item) {
             return (double) *item->var_p.float_p;
         case FUNC:
             return (double) item->var_p.func_p();
+        case CHAR:
+            return (double) *item->var_p.char_p;
     }
     return 0;
 }
@@ -156,6 +163,9 @@ void UI_item_show_value(UI_item *item, uint16_t x, uint16_t y, FontDef font) {
                 sprintf(buf, "%10.2f", UI_item_get_value(item));
             }
             break;
+        case CHAR:
+            sprintf(buf, "%10c", (char) value);
+            break;
     }
     ssd1306_SetCursor(x, y);
     ssd1306_WriteString(buf, font, White);
@@ -188,7 +198,7 @@ void UI_init(){
     UI_item_init(&items[5][3], "index", UINT8, &task_index);
     UI_item_init(&items[5][4], "input", FLOAT, &input_pos);
     UI_item_init(&items[5][5], "keept", UINT32, &keep_time);
-    UI_item_init(&items[5][6], "pidO ", FLOAT, &pidout);
+    UI_item_init(&items[5][6], "key  ", CHAR, &irtm.key);
 
     UI_item_init(&items[1][0], "Keep ", FLOAT, &keep_time_sec);
     UI_item_init(&items[1][1], "High ", FLOAT, &convert_pos);

@@ -40,6 +40,9 @@
 #include "sercom.h"
 #include "tfluna_i2c.h"
 #include "beep.h"
+#include "stdio.h"
+#include "string.h"
+#include "irtm.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -61,6 +64,8 @@
 
 /* USER CODE BEGIN PV */
 uint16_t tof_distance;
+uint8_t key;
+extern char buf[32];
 statInfo_t_VL53L0X distanceStr;
 #define stepmotor_music_notes 57
 int last_time = 0;
@@ -78,6 +83,7 @@ double fan_speed = 0;
 PID_Base fan_pid;
 float pidout;
 uint8_t sercom_rx_buf[8];
+uint8_t count = 0;
 
 
 
@@ -142,11 +148,10 @@ int main(void)
   MX_TIM3_Init();
   /* USER CODE BEGIN 2 */
 
-//    // ssd1306显示
-    ssd1306_Init();
+  ssd1306_Init();
+  UI_init();
+    IRTM_Init(&irtm, &huart2);
 
-    // UI界面
-    UI_init();
 //
     // sr04超声测距
 //    sr04.trig_port = GPIOA;
@@ -167,18 +172,9 @@ int main(void)
 //    setVcselPulsePeriod(VcselPeriodFinalRange, 12);
 //    setMeasurementTimingBudget(500 * 1000UL);
 
-    // beep
-    beep_init(&beep, &htim2, TIM_CHANNEL_1);
-
-    // 风扇
-    fan_init(&fan, &htim3, TIM_CHANNEL_3, TIM_CHANNEL_4);
-//    fan_pid = PID_Incremental_Init(-0.05, -0.000025, -0, 55, -55, 0, 0.5);
-fan_pid = PID_Base_Init(-0.3, -0.0003, -8, 65, -65, 1, 0, 0.5, 39);
 
     // 串口
-    HAL_UART_Receive_IT(&huart2, sercom_rx_buf, 1);
-
-    TF_Luna_init(&TF_Luna_1, &hi2c2, 0x10); //0x10->7bit. 7bit Slave address has been already shifting to the left in the library.
+//    HAL_UART_Receive_IT(&huart2, sercom_rx_buf, 1);
 
     // tim定时器
     HAL_TIM_Base_Start_IT(&htim1);
@@ -194,83 +190,16 @@ fan_pid = PID_Base_Init(-0.3, -0.0003, -8, 65, -65, 1, 0, 0.5, 39);
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-      if(stepmotor_music_index >= stepmotor_music_notes){
-          stepmotor_music_index = 0;
-      }
-        if(task_index == 7 && task_running == 1) {
-            // do nothing
-        } else {
-            if(keep_time > 0 && task_running == 1) {
-                beep_set_frequency(&beep, 500);
-            } else {
-                beep_set_frequency(&beep, 0);
-            }
-        }
-      if(tfDist > 55){
-          fan_pid.use_integral = 0;
-      } else {
-            fan_pid.use_integral = 1;
-      }
-      uint32_t perf_start_time = HAL_GetTick();
-//      tof_distance = readRangeSingleMillimeters(&distanceStr);
-        uint32_t perf_end_time = HAL_GetTick();
-        perf_time = perf_end_time - perf_start_time;
-        convert_pos = tube_max - tof_distance;
-        convert_pos = convert_pos * 0.2 + last_convert_pos * 0.8;
-        last_convert_pos = convert_pos;
-        keep_time_sec = (float)keep_time / 1000.0;
       UI_show();
       UI_key_process();
-      if(task_index == 2) {
-          fan_pid.Kp = -0.5;
-          fan_pid.Ki = -0.0002;
-          fan_pid.Kd = -10;
-      } else if(task_index == 3){
-          fan_pid.Kp = -0.1;
-          fan_pid.Ki = -0.0004;
-            fan_pid.Kd = -2;
-      } else {
-            fan_pid.Kp = -0.3;
-            fan_pid.Ki = -0.0006;
-            fan_pid.Kd = -8;
-      }
-      if(task_running == 1){
-          task_running_time = (HAL_GetTick() - task_start_running_time) / 1000;
-        switch (task_index) {
-        case 1:
-          task1();
-          break;
-        case 2:
-          task2();
-          break;
-        case 3:
-          task3(input_pos);
-          break;
-        case 4:
-          task4();
-          break;
-        case 5:
-        task5();
-        break;
-        case 6:
-          task6();
-          break;
-            case 7:
-            task7();
-          break;
-        }
-      }
+//      uint32_t perf_start_time = HAL_GetTick();
+//          IRTM_Send(&irtm, KEY_3);
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
-}
-
-void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
-    uart_queue_push(sercom_rx_buf[0]);
-    Ser_pos_callback(&ser_pos);
-    HAL_UART_Receive_IT(&huart2, sercom_rx_buf, 1);
 }
 
 /**
@@ -314,6 +243,10 @@ void SystemClock_Config(void)
 
 /* USER CODE BEGIN 4 */
 
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
+    IRTM_Read(&irtm);
+
+}
 /* USER CODE END 4 */
 
 /**

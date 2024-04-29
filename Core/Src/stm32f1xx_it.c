@@ -267,16 +267,6 @@ void TIM1_CC_IRQHandler(void)
 void TIM4_IRQHandler(void)
 {
   /* USER CODE BEGIN TIM4_IRQn 0 */
-  tof_distance = tfDist;
-    getData(&TF_Luna_1, &tfDist, &tfFlux, &tfTemp);
-  if(task_running == 1){
-//      pidout = PID_Incremental_Calc(&fan_pid, tof_distance, target_pos);
-      pidout = PID_Base_Calc(&fan_pid, tof_distance, target_pos);
-      fan_set_speed(&fan, pidout);
-  } else {
-        fan_set_speed(&fan, 0);
-  }
-//    fan_set_speed(&fan, fan_speed);
   /* USER CODE END TIM4_IRQn 0 */
   HAL_TIM_IRQHandler(&htim4);
   /* USER CODE BEGIN TIM4_IRQn 1 */

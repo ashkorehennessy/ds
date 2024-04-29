@@ -29,7 +29,8 @@ typedef enum {
     DOUBLE = 6,
     FLOAT = 7,
     EMPTY = 8,
-    FUNC = 9
+    FUNC = 9,
+    CHAR = 10
 } Type;
 
 typedef union {
@@ -42,6 +43,7 @@ typedef union {
     double *double_p;
     float *float_p;
     int (*func_p)(void);  // ֧����ʾ�ղ���int�����ķ���ֵ
+    char *char_p;
 } Var_p;
 
 typedef struct {
