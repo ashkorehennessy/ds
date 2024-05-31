@@ -64,19 +64,26 @@ double x_move_queue[10];
 double y_move_queue[10];
 double accx_queue[30];
 double accy_queue[30];
+double angx_queue[30];
+double angy_queue[30];
+double gyrox_queue[30];
+double gyroy_queue[30];
+double number_queue[10];
 extern char stand;
 extern char down;
 extern double angle;
 extern char trend;
 extern char x_axis;
 extern char y_axis;
-extern int number;
+extern char number;
 extern int length;
+char number_direction = ' ';
 int flag = 0;
 int count = 0;
-double x_move = 0;
-double y_move = 0;
+double accx_average;
+double accy_average;
 double derivative;
+uint32_t skip_detect = 0;
 /* USER CODE END EV */
 
 /******************************************************************************/
@@ -224,6 +231,12 @@ void TIM4_IRQHandler(void)
 {
   /* USER CODE BEGIN TIM4_IRQn 0 */
     MPU6050_Read_All(&hi2c2, &mpu6050);
+    queue_push(accx_queue, mpu6050.Ax, 30);
+    queue_push(accy_queue, mpu6050.Ay, 30);
+    queue_push(angx_queue, mpu6050.KalmanAngleX, 30);
+    queue_push(angy_queue, mpu6050.KalmanAngleY, 30);
+    queue_push(gyrox_queue, mpu6050.Gx, 30);
+    queue_push(gyroy_queue, mpu6050.Gy, 30);
     angle = 90 - sqrt(mpu6050.KalmanAngleX * mpu6050.KalmanAngleX + mpu6050.KalmanAngleY * mpu6050.KalmanAngleY);
     if(angle > 50){
         stand = '^';
@@ -242,11 +255,49 @@ void TIM4_IRQHandler(void)
         trend = ' ';
     }
 
+    double derivative_angx = queue_derivative(angx_queue, 30);
+    double derivative_angy = queue_derivative(angy_queue, 30);
+    double derivative_gyrox = queue_derivative(gyrox_queue, 30);
+    double derivative_gyroy = queue_derivative(gyroy_queue, 30);
+    if(abs(derivative_angx) > 25 && abs(derivative_angy) < 12){
+        x_axis = '*';
+        y_axis = ' ';
+    } else if(abs(derivative_angy) > 25 && abs(derivative_angx) < 12){
+        x_axis = ' ';
+        y_axis = '*';
+    }
+    if(HAL_GetTick() < 3000){
+        x_axis = ' ';
+        y_axis = ' ';
+        number = ' ';
+    }
+
     count++;
     if(count == 12){
         queue_push(angleZ_queue, mpu6050.AngleZ, 10);
         count = 0;
     }
+
+    if(HAL_GetTick() - skip_detect > 1000) {
+        if (derivative_angx > 10 && derivative_gyrox > 100 && number_direction != 'R') {
+            number_direction = 'R';
+            queue_push(number_queue, number_direction, 10);
+            skip_detect = HAL_GetTick();
+        } else if (derivative_angx < -10 && derivative_gyrox < -100 && number_direction != 'L') {
+            number_direction = 'L';
+            queue_push(number_queue, number_direction, 10);
+            skip_detect = HAL_GetTick();
+        } else if (derivative_angy > 10 && derivative_gyroy > 100 && number_direction != 'U') {
+            number_direction = 'U';
+            queue_push(number_queue, number_direction, 10);
+            skip_detect = HAL_GetTick();
+        } else if (derivative_angy < -10 && derivative_gyroy < -100 && number_direction != 'D') {
+            number_direction = 'D';
+            queue_push(number_queue, number_direction, 10);
+            skip_detect = HAL_GetTick();
+        }
+    }
+    number = number_recognize(number_queue, 10);
 
     derivative = queue_derivative(angleZ_queue, 10);
     if(derivative > 120 && flag == 0){
@@ -254,27 +305,6 @@ void TIM4_IRQHandler(void)
     } else if(derivative < -120 && flag == 1){
         flag = 0;
         NVIC_SystemReset();
-    }
-
-    queue_push(x_move_queue, mpu6050.Ax, 10);
-    queue_push(y_move_queue, mpu6050.Ay, 10);
-    if(abs(queue_derivative(x_move_queue, 10) > 0.2)){
-        x_move++;
-    }
-    if(abs(queue_derivative(y_move_queue, 10) > 0.2)){
-        y_move++;
-    }
-
-    if(x_move > 30 && x_move > y_move){
-        x_axis = '*';
-    } else {
-        x_axis = ' ';
-    }
-
-    if(y_move > 30 && y_move > x_move){
-        y_axis = '*';
-    } else {
-        y_axis = ' ';
     }
 
 
@@ -294,5 +324,35 @@ void queue_push(double *queue, double _angle, int size) {
 }
 double queue_derivative(double *queue, int size) {
     return (queue[size - 1] - queue[0]);
+}
+double queue_average(const double *queue, int size) {
+    double sum = 0;
+    for(int i = 0; i < size; i++){
+        sum += queue[i];
+    }
+    return sum / size;
+}
+char number_recognize(const double *queue, int size) {
+    if(queue[7] == 'U' && queue[8] == 'R' && queue[9] == 'D') {
+        return '4';
+    } else if(queue[8] == 'R' && queue[9] == 'D') {
+        return '7';
+    } else if(queue[5] == 'R' && queue[6] == 'D' && queue[7] == 'L' && queue[8] == 'D' && queue[9] == 'R'){
+        return '2';
+    } else if(queue[5] == 'L' && queue[6] == 'U' && queue[7] == 'R' && queue[8] == 'D' && queue[9] == 'L'){
+        return '9';
+    } else if(queue[5] == 'L' && queue[6] == 'D' && queue[7] == 'R' && queue[8] == 'D' && queue[9] == 'L'){
+        return '5';
+    } else if(queue[5] == 'R' && queue[6] == 'D' && queue[7] == 'L' && queue[8] == 'D' && queue[9] == 'L'){
+        return '3';
+    } else if(queue[5] == 'L' && queue[6] == 'D' && queue[7] == 'R' && queue[8] == 'U' && queue[9] == 'L'){
+        return '6';
+    } else if(queue[3] == 'U' && queue[4] == 'R' && queue[5] == 'D' &&queue[6] == 'L' && queue[7] == 'D' && queue[8] == 'R' && queue[9] == 'U'){
+        return '8';
+    } else if(queue[9] == 'D'){
+        return '1';
+    } else {
+        return ' ';
+    }
 }
 /* USER CODE END 1 */

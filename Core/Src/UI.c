@@ -21,8 +21,9 @@ extern double angle;
 extern char trend;
 extern char x_axis;
 extern char y_axis;
-extern int number;
+extern char number;
 extern int length;
+extern char number_direction;
 
 
 void UI_item_init(UI_item *item, const char *name, int type, void *var_ptr) {
@@ -138,12 +139,12 @@ void UI_init(){
         }
     }
     UI_item_init(&items[7][0], "Stand", CHAR, &stand);
-    UI_item_init(&items[7][1], "Down", CHAR, &down);
-    UI_item_init(&items[7][2], "Angle", DOUBLE, &angle);
-    UI_item_init(&items[7][3], "Trend", CHAR, &trend);
-    UI_item_init(&items[7][4], "X-axis", CHAR, &x_axis);
-    UI_item_init(&items[7][5], "Y-axis", CHAR, &y_axis);
-    UI_item_init(&items[7][6], "Number", INT32, &number);
+    UI_item_init(&items[7][1], "Angle", DOUBLE, &angle);
+    UI_item_init(&items[7][2], "Trend", CHAR, &trend);
+    UI_item_init(&items[7][3], "X-axis", CHAR, &x_axis);
+    UI_item_init(&items[7][4], "Y-axis", CHAR, &y_axis);
+    UI_item_init(&items[7][5], "Number", CHAR, &number);
+    UI_item_init(&items[7][6], "Direct", CHAR, &number_direction);
     UI_item_init(&items[7][7], "Length", INT32, &length);
 
 }

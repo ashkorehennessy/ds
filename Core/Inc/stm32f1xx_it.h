@@ -59,6 +59,8 @@ void TIM4_IRQHandler(void);
 /* USER CODE BEGIN EFP */
 void queue_push(double *queue, double _angle, int size);
 double queue_derivative(double *queue, int size);
+double queue_average(const double *queue, int size);
+char number_recognize(const double *queue, int size);
 /* USER CODE END EFP */
 
 #ifdef __cplusplus
