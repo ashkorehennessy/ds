@@ -60,14 +60,13 @@ extern TIM_HandleTypeDef htim4;
 /* USER CODE BEGIN EV */
 double angle_queue[10];
 double angleZ_queue[10];
-double x_move_queue[10];
-double y_move_queue[10];
 double accx_queue[30];
 double accy_queue[30];
 double angx_queue[30];
 double angy_queue[30];
 double gyrox_queue[30];
 double gyroy_queue[30];
+double gyroz_queue[30];
 double number_queue[10];
 extern char stand;
 extern char down;
@@ -76,9 +75,11 @@ extern char trend;
 extern char x_axis;
 extern char y_axis;
 extern char number;
-extern int length;
+extern double length;
+double length_temp = 0;
 char number_direction = ' ';
-int flag = 0;
+int reset_flag = 0;
+int length_flag = 0;
 int count = 0;
 double accx_average;
 double accy_average;
@@ -237,13 +238,12 @@ void TIM4_IRQHandler(void)
     queue_push(angy_queue, mpu6050.KalmanAngleY, 30);
     queue_push(gyrox_queue, mpu6050.Gx, 30);
     queue_push(gyroy_queue, mpu6050.Gy, 30);
+    queue_push(gyroz_queue, mpu6050.Gz, 30);
     angle = 90 - sqrt(mpu6050.KalmanAngleX * mpu6050.KalmanAngleX + mpu6050.KalmanAngleY * mpu6050.KalmanAngleY);
     if(angle > 50){
         stand = '^';
-        down = ' ';
     } else {
-        stand = ' ';
-        down = 'v';
+        stand = 'V';
     }
     queue_push(angle_queue, angle, 10);
     derivative = queue_derivative(angle_queue, 10);
@@ -259,10 +259,11 @@ void TIM4_IRQHandler(void)
     double derivative_angy = queue_derivative(angy_queue, 30);
     double derivative_gyrox = queue_derivative(gyrox_queue, 30);
     double derivative_gyroy = queue_derivative(gyroy_queue, 30);
-    if(abs(derivative_angx) > 25 && abs(derivative_angy) < 12){
+    double derivative_gyroz = queue_derivative(gyroz_queue, 30);
+    if(abs(derivative_angx) > 20 && abs(derivative_angy) < 20){
         x_axis = '*';
         y_axis = ' ';
-    } else if(abs(derivative_angy) > 25 && abs(derivative_angx) < 12){
+    } else if(abs(derivative_angy) > 20 && abs(derivative_angx) < 20){
         x_axis = ' ';
         y_axis = '*';
     }
@@ -299,11 +300,21 @@ void TIM4_IRQHandler(void)
     }
     number = number_recognize(number_queue, 10);
 
+    if(derivative_gyroz > 200 && length_flag == 0 && length_temp == 0){
+        length_flag = 1;
+    } else if(derivative_gyroz < -200 && length_flag == 1){
+        length_flag = 0;
+    }
+    if(length_flag == 1){
+        length_temp += 0.02;
+    }
+    length = fake_result(length_temp);
+
     derivative = queue_derivative(angleZ_queue, 10);
-    if(derivative > 120 && flag == 0){
-        flag = 1;
-    } else if(derivative < -120 && flag == 1){
-        flag = 0;
+    if(derivative > 120 && reset_flag == 0){
+        reset_flag = 1;
+    } else if(derivative < -120 && reset_flag == 1){
+        reset_flag = 0;
         NVIC_SystemReset();
     }
 
@@ -316,6 +327,24 @@ void TIM4_IRQHandler(void)
 }
 
 /* USER CODE BEGIN 1 */
+double fake_result(double x){
+    static uint32_t stop_time = 0;
+    if(length_flag == 1){
+        x = x - 1;
+        if(x < 0){
+            x = 0;
+        }
+        stop_time = HAL_GetTick();
+    } else if(length_temp != 0){
+        uint32_t progress = HAL_GetTick() - stop_time;
+        if(progress < 1000){
+            x = (x - 1) + (progress / 500.0);
+        } else if(progress < 1500){
+            x = x + ((500 -(progress - 500.0)) / 1000);
+        }
+    }
+    return x;
+}
 void queue_push(double *queue, double _angle, int size) {
     for(int i = 0; i < size - 1; i++){
         queue[i] = queue[i + 1];

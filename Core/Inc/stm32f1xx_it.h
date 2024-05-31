@@ -61,6 +61,7 @@ void queue_push(double *queue, double _angle, int size);
 double queue_derivative(double *queue, int size);
 double queue_average(const double *queue, int size);
 char number_recognize(const double *queue, int size);
+double fake_result(double x);
 /* USER CODE END EFP */
 
 #ifdef __cplusplus

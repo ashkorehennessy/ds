@@ -22,7 +22,7 @@ extern char trend;
 extern char x_axis;
 extern char y_axis;
 extern char number;
-extern int length;
+extern double length;
 extern char number_direction;
 
 
@@ -145,7 +145,7 @@ void UI_init(){
     UI_item_init(&items[7][4], "Y-axis", CHAR, &y_axis);
     UI_item_init(&items[7][5], "Number", CHAR, &number);
     UI_item_init(&items[7][6], "Direct", CHAR, &number_direction);
-    UI_item_init(&items[7][7], "Length", INT32, &length);
+    UI_item_init(&items[7][7], "Length", DOUBLE, &length);
 
 }
 

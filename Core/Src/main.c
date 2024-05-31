@@ -62,7 +62,7 @@ char trend = '+';
 char x_axis = '*';
 char y_axis = ' ';
 char number = ' ';
-int length = 1;
+double length = 0;
 extern double accx_average;
 extern double accy_average;
 extern char number_direction;
@@ -126,7 +126,7 @@ int main(void)
   while (1)
   {
       UI_show();
-      sprintf(buffer, "accxy_avg: %f,%f,%f,%f,%c\r\n", mpu6050.Gx, mpu6050.Gy, mpu6050.KalmanAngleX, mpu6050.KalmanAngleY, number_direction);
+      sprintf(buffer, "accxy_avg: %f,%f,%f,%f,%f,%f\r\n", mpu6050.Gx, mpu6050.Gy, mpu6050.Gz, mpu6050.Ax, mpu6050.Ay, mpu6050.Az);
       HAL_UART_Transmit(&huart1, (uint8_t *)buffer, sizeof(buffer), 1000);
       HAL_Delay(20);
     /* USER CODE END WHILE */
