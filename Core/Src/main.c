@@ -28,21 +28,8 @@
 /* USER CODE BEGIN Includes */
 #include "mpu6050.h"
 #include "UI.h"
-#include "sr04.h"
-#include "IR.h"
-#include "IR.h"
-#include "VL53L0X.h"
-#include "stepmotor.h"
-#include "delay_us.h"
-#include "fan.h"
-#include "PID.h"
-#include "tasks.h"
-#include "sercom.h"
-#include "tfluna_i2c.h"
-#include "beep.h"
 #include "stdio.h"
 #include "string.h"
-#include "irtm.h"
 #include "st7735.h"
 /* USER CODE END Includes */
 
@@ -64,47 +51,19 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-uint16_t tof_distance;
+char buffer[100];
 uint8_t key;
-extern char buf[32];
-statInfo_t_VL53L0X distanceStr;
-#define stepmotor_music_notes 57
-int last_time = 0;
-int stepmotor_music_delay = 250;
-int stepmotor_music_frequency[16] = {0, 523, 587, 659, 698, 783, 880, 987, 1046, 1175, 1319, 1397, 1568, 1760, 1976, 2093};
-int stepmotor_music_cirno[stepmotor_music_notes] = {2, 3, 4, 5, 6, 6, 6, 6, 4, 6, 4, 3, 2, 2, 2, 2, 0, 2, 5, 6, 9, 9, 9, 9, 8, 9, 8, 5, 6, 6, 6, 0};
-int music1[stepmotor_music_notes] = { 10, 10, 12, 13, 13, 13, 12, 13, 12, 10, 9, 12, 10, 10, 10, 10, 10, 0, 10, 10, 12, 13, 13,13, 12, 13, 15, 14, 13,12,13,13,13, 0};
-int music2[stepmotor_music_notes] = {8,8,8,8,8,8,8,0, 10, 11,0, 12, 13,13,0, 12, 0, 12,0,15,15,0};
-int music3[stepmotor_music_notes] = {3,3,4,5,5,5,4,3,2,1,1,2,3,3,2,2,0};
-int music_senrenbanka[stepmotor_music_notes] = {10,12,13,13,12,13,10,10,10,10,10,13,13,12,13,12,10,10,9,9,10,12,13,13,10,10,9,8,9,10,6,6,6,6,10,10,9,10,6,6,6,6,6,9,9,10,9,8,8,9,10,10,10,10,10,10,10};
-int stepmotor_music_index = 0;
-uint32_t perf_time;
-double fan_speed = 0;
+#define is_nan(x) ((x) != (x))
 //PID_Incremental fan_pid;
-PID_Base fan_pid;
-float pidout;
-uint8_t sercom_rx_buf[8];
-uint8_t count = 0;
 char stand = '*';
 char down = ' ';
 double angle = 1.2345;
 char trend = '+';
 char x_axis = '*';
 char y_axis = ' ';
-uint8_t number = 4;
-uint8_t length = 0;
-
-TF_Luna_Lidar TF_Luna_1;
+int number = 4;
+int length = 1;
 // device variables passed back by getData
-int16_t  tfDist = 0 ;   // distance in centimeters
-int16_t  tfFlux = 0 ;   // signal quality in arbitrary units
-int16_t  tfTemp = 0 ;   // temperature in 0.01 degree Celsius
-
-
-float tube_max = 55.20;
-float convert_pos = 0;
-float last_convert_pos = 0;
-float convert_pos_in_second = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -157,7 +116,6 @@ int main(void)
   ST7735_Init();
   UI_init();
     HAL_TIM_Base_Start_IT(&htim4);
-
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -165,8 +123,6 @@ int main(void)
   while (1)
   {
       UI_show();
-      UI_key_process();
-
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -215,10 +171,6 @@ void SystemClock_Config(void)
 
 /* USER CODE BEGIN 4 */
 
-void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
-    IRTM_Read(&irtm);
-
-}
 /* USER CODE END 4 */
 
 /**

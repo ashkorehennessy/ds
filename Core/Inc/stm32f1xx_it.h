@@ -57,8 +57,8 @@ void PendSV_Handler(void);
 void SysTick_Handler(void);
 void TIM4_IRQHandler(void);
 /* USER CODE BEGIN EFP */
-void angle_queue_push(double _angle);
-double angle_queue_derivative();
+void queue_push(double *queue, double _angle, int size);
+double queue_derivative(double *queue, int size);
 /* USER CODE END EFP */
 
 #ifdef __cplusplus
