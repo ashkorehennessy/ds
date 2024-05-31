@@ -57,29 +57,18 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
-#define stepmotor0_dir_Pin GPIO_PIN_13
-#define stepmotor0_dir_GPIO_Port GPIOC
-#define stepmotor0_pulse_Pin GPIO_PIN_14
-#define stepmotor0_pulse_GPIO_Port GPIOC
-#define stepmotor2_dir_Pin GPIO_PIN_15
-#define stepmotor2_dir_GPIO_Port GPIOC
-#define HongWai0_Pin GPIO_PIN_0
-#define HongWai0_GPIO_Port GPIOA
-#define stepmotor2_pulse_Pin GPIO_PIN_1
-#define stepmotor2_pulse_GPIO_Port GPIOA
-#define GuangDian0_Pin GPIO_PIN_4
-#define GuangDian0_GPIO_Port GPIOA
-#define GuangDian0_EXTI_IRQn EXTI4_IRQn
-#define GuangDian1_Pin GPIO_PIN_5
-#define GuangDian1_GPIO_Port GPIOA
-#define FanSheGuangDian0_Pin GPIO_PIN_6
-#define FanSheGuangDian0_GPIO_Port GPIOA
-#define FanSheGuangDian1_Pin GPIO_PIN_7
-#define FanSheGuangDian1_GPIO_Port GPIOA
-#define fan2_Pin GPIO_PIN_0
-#define fan2_GPIO_Port GPIOB
-#define fan3_Pin GPIO_PIN_1
-#define fan3_GPIO_Port GPIOB
+#define cs_Pin GPIO_PIN_2
+#define cs_GPIO_Port GPIOA
+#define dc_Pin GPIO_PIN_3
+#define dc_GPIO_Port GPIOA
+#define res_Pin GPIO_PIN_4
+#define res_GPIO_Port GPIOA
+#define SCLK_Pin GPIO_PIN_5
+#define SCLK_GPIO_Port GPIOA
+#define bl_Pin GPIO_PIN_6
+#define bl_GPIO_Port GPIOA
+#define SDA_Pin GPIO_PIN_7
+#define SDA_GPIO_Port GPIOA
 #define mpu6050_SCL_Pin GPIO_PIN_10
 #define mpu6050_SCL_GPIO_Port GPIOB
 #define mpu6050_SDA_Pin GPIO_PIN_11
@@ -92,24 +81,16 @@ void Error_Handler(void);
 #define sw1_GPIO_Port GPIOB
 #define sw0_Pin GPIO_PIN_15
 #define sw0_GPIO_Port GPIOB
-#define sr04_echo_TIM1_CH1_Pin GPIO_PIN_8
-#define sr04_echo_TIM1_CH1_GPIO_Port GPIOA
-#define sr04_trig_Pin GPIO_PIN_9
-#define sr04_trig_GPIO_Port GPIOA
 #define dip2_Pin GPIO_PIN_10
 #define dip2_GPIO_Port GPIOA
 #define dip1_Pin GPIO_PIN_11
 #define dip1_GPIO_Port GPIOA
 #define dip0_Pin GPIO_PIN_12
 #define dip0_GPIO_Port GPIOA
-#define fan0_Pin GPIO_PIN_15
-#define fan0_GPIO_Port GPIOA
-#define fan1_Pin GPIO_PIN_3
-#define fan1_GPIO_Port GPIOB
-#define oled_SCL_Pin GPIO_PIN_8
-#define oled_SCL_GPIO_Port GPIOB
-#define oled_SDA_Pin GPIO_PIN_9
-#define oled_SDA_GPIO_Port GPIOB
+#define mpu60501_SCL_Pin GPIO_PIN_8
+#define mpu60501_SCL_GPIO_Port GPIOB
+#define mpu60501_SDA_Pin GPIO_PIN_9
+#define mpu60501_SDA_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
 

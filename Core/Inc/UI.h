@@ -7,12 +7,12 @@
 
 #include "stm32f1xx_hal.h"
 
-#include "ssd1306_fonts.h"
+#include "fonts.h"
 
-#define FONT_W 6
-#define FONT_H 8
+#define FONT_W 11
+#define FONT_H 18
 #define SCREEN_W 128
-#define SCREEN_H 64
+#define SCREEN_H 160
 
 #define KEY_FORWARD SWITCH_1
 #define KEY_UP SWITCH_2

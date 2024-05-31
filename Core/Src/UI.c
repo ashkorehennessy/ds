@@ -6,7 +6,7 @@
 #include <stdio.h>
 #include "UI.h"
 #include "switch.h"
-#include "ssd1306.h"
+#include "st7735.h"
 #include "math.h"
 #include "mpu6050.h"
 #include "sr04.h"
@@ -17,20 +17,20 @@
 #include "irtm.h"
 
 char buf[32];
-UI_item items[8][SCREEN_H / FONT_H - 1];
+UI_item items[8][8];
 int empty = 0;
 int cursor_pos = 0;
 int exponent = 0;
 int ui_state = 0;  // 0:移动光标 1:修改数值 2:修改数值的指数
 int key_pressed = 0;
-extern uint16_t tof_distance;
-extern uint32_t perf_time;
-extern double fan_speed;
-extern int16_t  tfDist;
-extern float pidout;
-extern PID_Base fan_pid;
-extern int convert_pos;
-extern uint8_t key;
+extern char stand;
+extern char down;
+extern double angle;
+extern char trend;
+extern char x_axis;
+extern char y_axis;
+extern uint8_t number;
+extern uint8_t length;
 
 
 void UI_item_init(UI_item *item, const char *name, int type, void *var_ptr) {
@@ -131,11 +131,9 @@ void UI_item_set_value(UI_item *item, double value) {
 
 void UI_item_show_name(UI_item *item, uint16_t x, uint16_t y, FontDef font) {
     if(item->type == EMPTY) {
-        ssd1306_SetCursor(x, y);
-        ssd1306_WriteString("               ",font,White);
+        ST7735_WriteString(x, y, "          ",font, ST7735_WHITE, ST7735_BLACK);
     }
-    ssd1306_SetCursor(x, y);
-    ssd1306_WriteString(item->name, font, White);
+    ST7735_WriteString(x, y, item->name, font, ST7735_YELLOW, ST7735_BLACK);
 }
 
 void UI_item_show_value(UI_item *item, uint16_t x, uint16_t y, FontDef font) {
@@ -152,7 +150,7 @@ void UI_item_show_value(UI_item *item, uint16_t x, uint16_t y, FontDef font) {
             if(value > 9999999999 || value < -999999999){
                 sprintf(buf, " Out range");
             } else {
-                sprintf(buf, "%10.0f", value);
+                sprintf(buf, "%5.0f", value);
             }
             break;
         case DOUBLE:
@@ -160,15 +158,14 @@ void UI_item_show_value(UI_item *item, uint16_t x, uint16_t y, FontDef font) {
             if(value > 9999999.99 || value < -999999.99){
                 sprintf(buf, " Out range");
             } else {
-                sprintf(buf, "%10.2f", UI_item_get_value(item));
+                sprintf(buf, "%5.2f", UI_item_get_value(item));
             }
             break;
         case CHAR:
-            sprintf(buf, "%10c", (char) value);
+            sprintf(buf, "%5c", (char) value);
             break;
     }
-    ssd1306_SetCursor(x, y);
-    ssd1306_WriteString(buf, font, White);
+    ST7735_WriteString(x, y,buf, font, ST7735_WHITE, ST7735_BLACK);
 }
 
 void UI_init(){
@@ -178,30 +175,14 @@ void UI_init(){
             items[page][item].type = EMPTY;
         }
     }
-    UI_item_init(&items[7][0], "AngX ", DOUBLE, &mpu6050.KalmanAngleX);
-    UI_item_init(&items[7][1], "AngY ", DOUBLE, &mpu6050.KalmanAngleY);
-    UI_item_init(&items[7][2], "AngZ ", DOUBLE, &mpu6050.AngleZ);
-    UI_item_init(&items[7][3], "fan  ", DOUBLE, &fan_speed);
-    UI_item_init(&items[7][4], "vldis", UINT16, &tof_distance);
-    UI_item_init(&items[7][5], "time ", UINT32, &perf_time);
-    UI_item_init(&items[7][6], "IR   ", INT32, &ir.state);
-    UI_item_init(&items[6][0], "Apos ", FLOAT, &A_pos);
-    UI_item_init(&items[6][1], "Bpos ", FLOAT, &B_pos);
-    UI_item_init(&items[6][2], "Cpos ", FLOAT, &C_pos);
-    UI_item_init(&items[6][3], "Dpos ", FLOAT, &D_pos);
-    UI_item_init(&items[6][4], "offst", FLOAT, &pos_offset);
-    UI_item_init(&items[6][4], "taskT", FLOAT, &task_running_time);
-    UI_item_init(&items[6][5], "tfdis", INT16, &tfDist);
-    UI_item_init(&items[5][0], "targt", FLOAT, &target_pos);
-    UI_item_init(&items[5][1], "tfdis", INT16, &tfDist);
-    UI_item_init(&items[5][2], "pos  ", FLOAT, &convert_pos);
-    UI_item_init(&items[5][3], "index", UINT8, &task_index);
-    UI_item_init(&items[5][4], "input", FLOAT, &input_pos);
-    UI_item_init(&items[5][5], "keept", UINT32, &keep_time);
-    UI_item_init(&items[5][6], "key  ", CHAR, &irtm.key);
-
-    UI_item_init(&items[1][0], "Keep ", FLOAT, &keep_time_sec);
-    UI_item_init(&items[1][1], "High ", FLOAT, &convert_pos);
+    UI_item_init(&items[7][0], "Stand", CHAR, &stand);
+    UI_item_init(&items[7][1], "Down", CHAR, &down);
+    UI_item_init(&items[7][2], "Angle", DOUBLE, &angle);
+    UI_item_init(&items[7][3], "Trend", CHAR, &trend);
+    UI_item_init(&items[7][4], "X-axis", CHAR, &x_axis);
+    UI_item_init(&items[7][5], "Y-axis", CHAR, &y_axis);
+    UI_item_init(&items[7][6], "Number", UINT8, &number);
+    UI_item_init(&items[7][7], "Length", UINT8, &length);
 
 }
 
@@ -217,60 +198,21 @@ void UI_show(){
         last_ui_state = ui_state;
         key_pressed = 0;
 
-        ssd1306_Fill(Black);
-        // 顶部
-        sprintf(buf, "Page%d", dip_switch);
-        ssd1306_SetCursor(0, 0);
-        ssd1306_WriteString(buf, Font_6x8, White);
-        sprintf(buf, "10%+d", exponent);
-        ssd1306_SetCursor(SCREEN_W - FONT_W * 4, 0);
-        ssd1306_WriteString(buf, Font_6x8, White);
-        for (int i = 0; i < SCREEN_H / FONT_H - 1; i++) {
-            ssd1306_SetCursor(0, FONT_H * i + FONT_H);
-            ssd1306_WriteChar('|', Font_6x8, White);
+        ST7735_FillScreenFast(ST7735_BLACK);
+        for(int i = 0; i < 8; i++) {
+            UI_item_show_name(&items[7][i], 5, i * FONT_H + 8, Font_11x18);
         }
-
-        // 显示光标
-        switch (ui_state) {
-            case 0:
-                ssd1306_SetCursor(0, FONT_H * cursor_pos + FONT_H);
-                ssd1306_WriteChar('>', Font_6x8, White);
-                break;
-            case 1:
-                ssd1306_SetCursor(0, FONT_H * cursor_pos + FONT_H);
-                ssd1306_WriteChar('*', Font_6x8, White);
-                break;
-            case 2:
-                ssd1306_SetCursor(0, FONT_H * cursor_pos + FONT_H);
-                ssd1306_WriteChar('^', Font_6x8, White);
-                break;
-        }
-        // 显示名字
-        for(int i = 0; i < SCREEN_H / FONT_H - 1; i++){
-            UI_item_show_name(&items[dip_switch][i], FONT_W, FONT_H * i + FONT_H, Font_6x8);
-        }
-        ssd1306_UpdateScreen();
     }
 
-    //显示值
-    for(int i = 0; i < SCREEN_H / FONT_H - 1; i++){
-        UI_item_show_value(&items[dip_switch][i], SCREEN_W - FONT_W * 10, FONT_H * i + FONT_H, Font_6x8);
+    for(int i = 0; i < 8; i++) {
+        UI_item_show_value(&items[7][i], 70, i * FONT_H + 8, Font_11x18);
     }
-
     // 显示自定义部分
     UI_show_custom_part();
-    ssd1306_UpdateScreen();
 
 }
 
 void UI_show_custom_part(){
-    switch (DIP_SWITCH){
-        case 1:
-            UI_item_show_value(&items[1][0], 17, 8, Font_11x18);
-            UI_item_show_value(&items[1][1], 17, 32, Font_11x18);
-            UI_item_show_name(&items[1][0], 6, 8, Font_11x18);
-            UI_item_show_name(&items[1][1], 6, 32, Font_11x18);
-    }
 }
 
 void UI_key_process(){
@@ -348,7 +290,6 @@ void UI_key_process(){
             task_start_running_time = HAL_GetTick();
         } else {
             task_running = 0;
-            fan_pid.integral = 0;
         }
     } else if(!KEY_BACK && key_back_pressed){
         key_back_pressed = 0;

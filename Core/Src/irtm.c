@@ -53,22 +53,22 @@ void IRTM_ChangeAddress(IRTM_t *irtm_struct, uint8_t address) {
 
 char IRTM_KeyToChar(IRTM_t *irtm_struct) {
     switch (irtm_struct->key_raw) {
-        case KEY_UP:
+        case I_KEY_UP:
             irtm_struct->key = 'U';
             break;
-        case KEY_DOWN:
+        case I_KEY_DOWN:
             irtm_struct->key = 'D';
             break;
-        case KEY_LEFT:
+        case I_KEY_LEFT:
             irtm_struct->key = 'L';
             break;
-        case KEY_RIGHT:
+        case I_KEY_RIGHT:
             irtm_struct->key = 'R';
             break;
         case KEY_OK:
             irtm_struct->key = 'O';
             break;
-        case KEY_BACK:
+        case I_KEY_BACK:
             irtm_struct->key = 'B';
             break;
         case KEY_TEST:

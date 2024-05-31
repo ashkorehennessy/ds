@@ -32,6 +32,7 @@
 #include "PID.h"
 #include "sercom.h"
 #include "tfluna_i2c.h"
+#include <math.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -64,9 +65,7 @@
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/
-extern TIM_HandleTypeDef htim1;
 extern TIM_HandleTypeDef htim4;
-extern UART_HandleTypeDef huart2;
 /* USER CODE BEGIN EV */
 extern uint16_t tof_distance;
 extern statInfo_t_VL53L0X distanceStr;
@@ -79,6 +78,15 @@ extern int16_t  tfFlux  ;   // signal quality in arbitrary units
 extern int16_t  tfTemp  ;   // temperature in 0.01 degree Celsius
 extern double fan_speed;
 extern float pidout;
+double angle_queue[10];
+extern char stand;
+extern char down;
+extern double angle;
+extern char trend;
+extern char x_axis;
+extern char y_axis;
+extern uint8_t number;
+extern uint8_t length;
 /* USER CODE END EV */
 
 /******************************************************************************/
@@ -220,53 +228,29 @@ void SysTick_Handler(void)
 /******************************************************************************/
 
 /**
-  * @brief This function handles EXTI line4 interrupt.
-  */
-void EXTI4_IRQHandler(void)
-{
-  /* USER CODE BEGIN EXTI4_IRQn 0 */
-    IR_exti_callback(&ir);
-  /* USER CODE END EXTI4_IRQn 0 */
-  HAL_GPIO_EXTI_IRQHandler(GuangDian0_Pin);
-  /* USER CODE BEGIN EXTI4_IRQn 1 */
-
-  /* USER CODE END EXTI4_IRQn 1 */
-}
-
-/**
-  * @brief This function handles TIM1 update interrupt.
-  */
-void TIM1_UP_IRQHandler(void)
-{
-  /* USER CODE BEGIN TIM1_UP_IRQn 0 */
-  sr04.tim_update_count++;
-  /* USER CODE END TIM1_UP_IRQn 0 */
-  HAL_TIM_IRQHandler(&htim1);
-  /* USER CODE BEGIN TIM1_UP_IRQn 1 */
-
-  /* USER CODE END TIM1_UP_IRQn 1 */
-}
-
-/**
-  * @brief This function handles TIM1 capture compare interrupt.
-  */
-void TIM1_CC_IRQHandler(void)
-{
-  /* USER CODE BEGIN TIM1_CC_IRQn 0 */
-  sr04_read_distance(&sr04);
-  /* USER CODE END TIM1_CC_IRQn 0 */
-  HAL_TIM_IRQHandler(&htim1);
-  /* USER CODE BEGIN TIM1_CC_IRQn 1 */
-
-  /* USER CODE END TIM1_CC_IRQn 1 */
-}
-
-/**
   * @brief This function handles TIM4 global interrupt.
   */
 void TIM4_IRQHandler(void)
 {
   /* USER CODE BEGIN TIM4_IRQn 0 */
+    MPU6050_Read_All(&hi2c2, &mpu6050);
+    angle = sqrt(mpu6050.KalmanAngleX * mpu6050.KalmanAngleX + mpu6050.KalmanAngleY * mpu6050.KalmanAngleY);
+    if(angle < 50){
+        stand = '*';
+        down = ' ';
+    } else {
+        stand = ' ';
+        down = '*';
+    }
+    angle_queue_push(angle);
+    double derivative = angle_queue_derivative();
+    if(derivative > 0.2){
+        trend = '-';
+    } else if(derivative < -0.2) {
+        trend = '+';
+    } else {
+        trend = ' ';
+    }
   /* USER CODE END TIM4_IRQn 0 */
   HAL_TIM_IRQHandler(&htim4);
   /* USER CODE BEGIN TIM4_IRQn 1 */
@@ -274,19 +258,14 @@ void TIM4_IRQHandler(void)
   /* USER CODE END TIM4_IRQn 1 */
 }
 
-/**
-  * @brief This function handles USART2 global interrupt.
-  */
-void USART2_IRQHandler(void)
-{
-  /* USER CODE BEGIN USART2_IRQn 0 */
-  /* USER CODE END USART2_IRQn 0 */
-  HAL_UART_IRQHandler(&huart2);
-  /* USER CODE BEGIN USART2_IRQn 1 */
-
-  /* USER CODE END USART2_IRQn 1 */
-}
-
 /* USER CODE BEGIN 1 */
-
+void angle_queue_push(double _angle){
+    for(int i = 0; i < 9; i++){
+        angle_queue[i] = angle_queue[i + 1];
+    }
+    angle_queue[9] = _angle;
+}
+double angle_queue_derivative(){
+    return (angle_queue[9] - angle_queue[0]) / 10;
+}
 /* USER CODE END 1 */

@@ -19,6 +19,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "i2c.h"
+#include "spi.h"
 #include "tim.h"
 #include "usart.h"
 #include "gpio.h"
@@ -26,7 +27,6 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "mpu6050.h"
-#include "ssd1306.h"
 #include "UI.h"
 #include "sr04.h"
 #include "IR.h"
@@ -43,6 +43,7 @@
 #include "stdio.h"
 #include "string.h"
 #include "irtm.h"
+#include "st7735.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -84,8 +85,14 @@ PID_Base fan_pid;
 float pidout;
 uint8_t sercom_rx_buf[8];
 uint8_t count = 0;
-
-
+char stand = '*';
+char down = ' ';
+double angle = 1.2345;
+char trend = '+';
+char x_axis = '*';
+char y_axis = ' ';
+uint8_t number = 4;
+uint8_t length = 0;
 
 TF_Luna_Lidar TF_Luna_1;
 // device variables passed back by getData
@@ -141,48 +148,15 @@ int main(void)
   MX_GPIO_Init();
   MX_I2C1_Init();
   MX_I2C2_Init();
-  MX_TIM1_Init();
-  MX_TIM2_Init();
-  MX_USART2_UART_Init();
+  MX_SPI1_Init();
   MX_TIM4_Init();
-  MX_TIM3_Init();
+  MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
 
-  ssd1306_Init();
+    MPU6050_Init(&hi2c2);
+  ST7735_Init();
   UI_init();
-    IRTM_Init(&irtm, &huart2);
-
-//
-    // sr04³¬Éù²â¾à
-//    sr04.trig_port = GPIOA;
-//    sr04.trig_pin = GPIO_PIN_9;
-//    sr04.echo_htim = &htim1;
-//    sr04.echo_channel = TIM_CHANNEL_1;
-//    sr04.use_lowpass_filter = 1;
-//    sr04.lowpass_factor = 0.3f;
-//    sr04_init(&sr04);
-
-
-    // vl53l0x tof
-//    initVL53L0X(1, &hi2c2);
-//
-//    // Configure the sensor for high accuracy and speed in 20 cm.
-//    setSignalRateLimit(200);
-//    setVcselPulsePeriod(VcselPeriodPreRange, 6);
-//    setVcselPulsePeriod(VcselPeriodFinalRange, 12);
-//    setMeasurementTimingBudget(500 * 1000UL);
-
-
-    // ´®¿Ú
-//    HAL_UART_Receive_IT(&huart2, sercom_rx_buf, 1);
-
-    // tim¶¨Ê±Æ÷
-    HAL_TIM_Base_Start_IT(&htim1);
     HAL_TIM_Base_Start_IT(&htim4);
-//    for(stepmotor_music_index = 0; stepmotor_music_index < stepmotor_music_notes; stepmotor_music_index++){
-//        beep_set_frequency(&beep, stepmotor_music_frequency[music2[stepmotor_music_index]]);
-//        HAL_Delay(200);
-//    }
 
   /* USER CODE END 2 */
 
@@ -192,8 +166,6 @@ int main(void)
   {
       UI_show();
       UI_key_process();
-//      uint32_t perf_start_time = HAL_GetTick();
-//          IRTM_Send(&irtm, KEY_3);
 
     /* USER CODE END WHILE */
 
