@@ -98,6 +98,8 @@ float tube_max = 55.20;
 float convert_pos = 0;
 float last_convert_pos = 0;
 float convert_pos_in_second = 0;
+int fan0 = 500;
+int fan1 = 500;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -142,7 +144,6 @@ int main(void)
   MX_I2C1_Init();
   MX_I2C2_Init();
   MX_TIM1_Init();
-  MX_TIM2_Init();
   MX_USART2_UART_Init();
   MX_TIM4_Init();
   MX_TIM3_Init();
@@ -150,7 +151,7 @@ int main(void)
 
   ssd1306_Init();
   UI_init();
-    IRTM_Init(&irtm, &huart2);
+//    IRTM_Init(&irtm, &huart2);
 
 //
     // sr04³¬Éù²â¾à
@@ -177,8 +178,6 @@ int main(void)
 //    HAL_UART_Receive_IT(&huart2, sercom_rx_buf, 1);
 
     // tim¶¨Ê±Æ÷
-    HAL_TIM_Base_Start_IT(&htim1);
-    HAL_TIM_Base_Start_IT(&htim4);
 //    for(stepmotor_music_index = 0; stepmotor_music_index < stepmotor_music_notes; stepmotor_music_index++){
 //        beep_set_frequency(&beep, stepmotor_music_frequency[music2[stepmotor_music_index]]);
 //        HAL_Delay(200);
@@ -194,6 +193,16 @@ int main(void)
       UI_key_process();
 //      uint32_t perf_start_time = HAL_GetTick();
 //          IRTM_Send(&irtm, KEY_3);
+      if(fan0 > 550 && fan0 < 1500){
+          HAL_GPIO_WritePin(fan0_GPIO_Port, fan0_Pin, GPIO_PIN_RESET);
+      } else {
+            HAL_GPIO_WritePin(fan0_GPIO_Port, fan0_Pin, GPIO_PIN_SET);
+      }
+      if(fan1 > 550 && fan1 < 1500){
+          HAL_GPIO_WritePin(fan1_GPIO_Port, fan1_Pin, GPIO_PIN_RESET);
+      } else {
+            HAL_GPIO_WritePin(fan1_GPIO_Port, fan1_Pin, GPIO_PIN_SET);
+      }
 
     /* USER CODE END WHILE */
 

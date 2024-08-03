@@ -31,6 +31,8 @@ extern float pidout;
 extern PID_Base fan_pid;
 extern int convert_pos;
 extern uint8_t key;
+extern int fan0;
+extern int fan1;
 
 
 void UI_item_init(UI_item *item, const char *name, int type, void *var_ptr) {
@@ -178,8 +180,8 @@ void UI_init(){
             items[page][item].type = EMPTY;
         }
     }
-    UI_item_init(&items[7][0], "AngX ", DOUBLE, &mpu6050.KalmanAngleX);
-    UI_item_init(&items[7][1], "AngY ", DOUBLE, &mpu6050.KalmanAngleY);
+    UI_item_init(&items[7][0], "fan0 ", INT32, &fan0);
+    UI_item_init(&items[7][1], "fan1 ", INT32, &fan1);
     UI_item_init(&items[7][2], "AngZ ", DOUBLE, &mpu6050.AngleZ);
     UI_item_init(&items[7][3], "fan  ", DOUBLE, &fan_speed);
     UI_item_init(&items[7][4], "vldis", UINT16, &tof_distance);

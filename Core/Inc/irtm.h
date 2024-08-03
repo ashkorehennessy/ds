@@ -38,10 +38,10 @@ char IRTM_KeyToChar(IRTM_t *irtm_struct);
 #define CONFIG_BAUDRATE_57600 0x04
 
 // Key codes
-#define KEY_UP 0x40
-#define KEY_DOWN 0x19
-#define KEY_LEFT 0x07
-#define KEY_RIGHT 0x09
+#define IR_KEY_UP 0x40
+#define IR_KEY_DOWN 0x19
+#define IR_KEY_LEFT 0x07
+#define IR_KEY_RIGHT 0x09
 #define KEY_OK 0x15
 #define KEY_BACK 0x43
 #define KEY_TEST 0x44
