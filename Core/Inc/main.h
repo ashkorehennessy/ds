@@ -102,10 +102,6 @@ void Error_Handler(void);
 #define dip1_GPIO_Port GPIOA
 #define dip0_Pin GPIO_PIN_12
 #define dip0_GPIO_Port GPIOA
-#define fan0_Pin GPIO_PIN_15
-#define fan0_GPIO_Port GPIOA
-#define fan1_Pin GPIO_PIN_3
-#define fan1_GPIO_Port GPIOB
 #define oled_SCL_Pin GPIO_PIN_8
 #define oled_SCL_GPIO_Port GPIOB
 #define oled_SDA_Pin GPIO_PIN_9

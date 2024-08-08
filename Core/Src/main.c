@@ -147,6 +147,7 @@ int main(void)
   MX_USART2_UART_Init();
   MX_TIM4_Init();
   MX_TIM3_Init();
+  MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
 
   ssd1306_Init();
@@ -183,6 +184,8 @@ int main(void)
 //        HAL_Delay(200);
 //    }
 
+    HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
+    HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_2);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -191,18 +194,10 @@ int main(void)
   {
       UI_show();
       UI_key_process();
+      __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, fan0);
+        __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_2, fan1);
 //      uint32_t perf_start_time = HAL_GetTick();
 //          IRTM_Send(&irtm, KEY_3);
-      if(fan0 > 550 && fan0 < 1500){
-          HAL_GPIO_WritePin(fan0_GPIO_Port, fan0_Pin, GPIO_PIN_RESET);
-      } else {
-            HAL_GPIO_WritePin(fan0_GPIO_Port, fan0_Pin, GPIO_PIN_SET);
-      }
-      if(fan1 > 550 && fan1 < 1500){
-          HAL_GPIO_WritePin(fan1_GPIO_Port, fan1_Pin, GPIO_PIN_RESET);
-      } else {
-            HAL_GPIO_WritePin(fan1_GPIO_Port, fan1_Pin, GPIO_PIN_SET);
-      }
 
     /* USER CODE END WHILE */
 
