@@ -29,6 +29,7 @@ extern int16_t  tfDist;
 extern float pidout;
 extern PID_Base fan_pid;
 extern int convert_pos;
+extern float tube_max;
 
 
 void UI_item_init(UI_item *item, const char *name, int type, void *var_ptr) {
@@ -182,6 +183,7 @@ void UI_init(){
     UI_item_init(&items[6][4], "offst", FLOAT, &pos_offset);
     UI_item_init(&items[6][4], "taskT", FLOAT, &task_running_time);
     UI_item_init(&items[6][5], "tfdis", INT16, &tfDist);
+    UI_item_init(&items[6][6], "tubeM", FLOAT, &tube_max);
     UI_item_init(&items[5][0], "targt", FLOAT, &target_pos);
     UI_item_init(&items[5][1], "tfdis", INT16, &tfDist);
     UI_item_init(&items[5][2], "pos  ", FLOAT, &convert_pos);

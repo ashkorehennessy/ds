@@ -264,7 +264,7 @@ int task7(){
     if(part_start_time == 0){
         part_start_time = HAL_GetTick();
     }
-    target_pos = 50 - (music_senrenbanka[stepmotor_music_index] * 5 - 30);
+    target_pos = 45 - (music_senrenbanka[stepmotor_music_index] * 5 - 30);
     if(HAL_GetTick() - part_start_time > 180){
         beep_set_frequency(&beep, stepmotor_music_frequency[music_senrenbanka[stepmotor_music_index]]);
         part_start_time = 0;
