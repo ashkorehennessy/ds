@@ -53,64 +53,64 @@ void IRTM_ChangeAddress(IRTM_t *irtm_struct, uint8_t address) {
 
 char IRTM_KeyToChar(IRTM_t *irtm_struct) {
     switch (irtm_struct->key_raw) {
-        case KEY_UP:
+        case IR_KEY_UP:
             irtm_struct->key = 'U';
             break;
-        case KEY_DOWN:
+        case IR_KEY_DOWN:
             irtm_struct->key = 'D';
             break;
-        case KEY_LEFT:
+        case IR_KEY_LEFT:
             irtm_struct->key = 'L';
             break;
-        case KEY_RIGHT:
+        case IR_KEY_RIGHT:
             irtm_struct->key = 'R';
             break;
-        case KEY_OK:
+        case IR_KEY_OK:
             irtm_struct->key = 'O';
             break;
-        case KEY_BACK:
+        case IR_KEY_BACK:
             irtm_struct->key = 'B';
             break;
-        case KEY_TEST:
+        case IR_KEY_TEST:
             irtm_struct->key = 'T';
             break;
-        case KEY_POWER:
+        case IR_KEY_POWER:
             irtm_struct->key = 'P';
             break;
-        case KEY_MENU:
+        case IR_KEY_MENU:
             irtm_struct->key = 'M';
             break;
-        case KEY_C:
+        case IR_KEY_C:
             irtm_struct->key = 'C';
             break;
-        case KEY_0:
+        case IR_KEY_0:
             irtm_struct->key = '0';
             break;
-        case KEY_1:
+        case IR_KEY_1:
             irtm_struct->key = '1';
             break;
-        case KEY_2:
+        case IR_KEY_2:
             irtm_struct->key = '2';
             break;
-        case KEY_3:
+        case IR_KEY_3:
             irtm_struct->key = '3';
             break;
-        case KEY_4:
+        case IR_KEY_4:
             irtm_struct->key = '4';
             break;
-        case KEY_5:
+        case IR_KEY_5:
             irtm_struct->key = '5';
             break;
-        case KEY_6:
+        case IR_KEY_6:
             irtm_struct->key = '6';
             break;
-        case KEY_7:
+        case IR_KEY_7:
             irtm_struct->key = '7';
             break;
-        case KEY_8:
+        case IR_KEY_8:
             irtm_struct->key = '8';
             break;
-        case KEY_9:
+        case IR_KEY_9:
             irtm_struct->key = '9';
             break;
         default:

@@ -15,6 +15,7 @@
 #include "sercom.h"
 #include "PID.h"
 #include "irtm.h"
+#include "icm20948.h"
 
 char buf[32];
 UI_item items[8][SCREEN_H / FONT_H - 1];
@@ -32,6 +33,11 @@ extern PID_Base fan_pid;
 extern int convert_pos;
 extern uint8_t key;
 
+extern axises my_gyro;
+extern axises my_accel;
+extern axises my_mag;
+extern float motor0_speed;
+extern float motor1_speed;
 
 void UI_item_init(UI_item *item, const char *name, int type, void *var_ptr) {
     strcpy(item->name, name);
@@ -178,9 +184,9 @@ void UI_init(){
             items[page][item].type = EMPTY;
         }
     }
-    UI_item_init(&items[7][0], "AngX ", DOUBLE, &mpu6050.KalmanAngleX);
-    UI_item_init(&items[7][1], "AngY ", DOUBLE, &mpu6050.KalmanAngleY);
-    UI_item_init(&items[7][2], "AngZ ", DOUBLE, &mpu6050.AngleZ);
+    UI_item_init(&items[7][0], "moto0", FLOAT, &motor0_speed);
+    UI_item_init(&items[7][1], "moto1", FLOAT, &motor1_speed);
+    UI_item_init(&items[7][2], "index", UINT8, &task_index);
     UI_item_init(&items[7][3], "fan  ", DOUBLE, &fan_speed);
     UI_item_init(&items[7][4], "vldis", UINT16, &tof_distance);
     UI_item_init(&items[7][5], "time ", UINT32, &perf_time);
@@ -199,9 +205,15 @@ void UI_init(){
     UI_item_init(&items[5][4], "input", FLOAT, &input_pos);
     UI_item_init(&items[5][5], "keept", UINT32, &keep_time);
     UI_item_init(&items[5][6], "key  ", CHAR, &irtm.key);
-
-    UI_item_init(&items[1][0], "Keep ", FLOAT, &keep_time_sec);
-    UI_item_init(&items[1][1], "High ", FLOAT, &convert_pos);
+    UI_item_init(&items[1][0], "Ax   ", FLOAT, &my_accel.x);
+    UI_item_init(&items[1][1], "Ay   ", FLOAT, &my_accel.y);
+    UI_item_init(&items[1][2], "Az   ", FLOAT, &my_accel.z);
+    UI_item_init(&items[1][3], "Gx   ", FLOAT, &my_gyro.x);
+    UI_item_init(&items[1][4], "Gy   ", FLOAT, &my_gyro.y);
+    UI_item_init(&items[1][5], "Gz   ", FLOAT, &my_gyro.z);
+    UI_item_init(&items[2][0], "Mx   ", FLOAT, &my_mag.x);
+    UI_item_init(&items[2][1], "My   ", FLOAT, &my_mag.y);
+    UI_item_init(&items[2][2], "Mz   ", FLOAT, &my_mag.z);
 
 }
 
@@ -258,7 +270,7 @@ void UI_show(){
     }
 
     // 显示自定义部分
-    UI_show_custom_part();
+//    UI_show_custom_part();
     ssd1306_UpdateScreen();
 
 }

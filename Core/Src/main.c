@@ -19,6 +19,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "i2c.h"
+#include "spi.h"
 #include "tim.h"
 #include "usart.h"
 #include "gpio.h"
@@ -43,6 +44,7 @@
 #include "stdio.h"
 #include "string.h"
 #include "irtm.h"
+#include "icm20948.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -85,7 +87,10 @@ float pidout;
 uint8_t sercom_rx_buf[8];
 uint8_t count = 0;
 
-
+//Fan motor0;
+//Fan motor1;
+Fan_gpio motor0;
+Fan_gpio motor1;
 
 TF_Luna_Lidar TF_Luna_1;
 // device variables passed back by getData
@@ -98,6 +103,13 @@ float tube_max = 55.20;
 float convert_pos = 0;
 float last_convert_pos = 0;
 float convert_pos_in_second = 0;
+float motor0_speed = 0;
+float motor1_speed = 0;
+uint32_t tick = 0;
+uint8_t flag = 0;
+axises my_gyro;
+axises my_accel;
+axises my_mag;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -117,6 +129,7 @@ void SystemClock_Config(void);
   */
 int main(void)
 {
+
   /* USER CODE BEGIN 1 */
 
   /* USER CODE END 1 */
@@ -146,14 +159,14 @@ int main(void)
   MX_USART2_UART_Init();
   MX_TIM4_Init();
   MX_TIM3_Init();
+  MX_SPI1_Init();
   /* USER CODE BEGIN 2 */
 
   ssd1306_Init();
   UI_init();
-    IRTM_Init(&irtm, &huart2);
 
 //
-    // sr04³¬Éù²â¾à
+    // sr04ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 //    sr04.trig_port = GPIOA;
 //    sr04.trig_pin = GPIO_PIN_9;
 //    sr04.echo_htim = &htim1;
@@ -173,17 +186,24 @@ int main(void)
 //    setMeasurementTimingBudget(500 * 1000UL);
 
 
-    // ´®¿Ú
+    // ï¿½ï¿½ï¿½ï¿½
 //    HAL_UART_Receive_IT(&huart2, sercom_rx_buf, 1);
 
-    // tim¶¨Ê±Æ÷
-    HAL_TIM_Base_Start_IT(&htim1);
-    HAL_TIM_Base_Start_IT(&htim4);
+    // timï¿½ï¿½Ê±ï¿½ï¿½
+//    HAL_TIM_Base_Start_IT(&htim1);
+//    HAL_TIM_Base_Start_IT(&htim4);
 //    for(stepmotor_music_index = 0; stepmotor_music_index < stepmotor_music_notes; stepmotor_music_index++){
 //        beep_set_frequency(&beep, stepmotor_music_frequency[music2[stepmotor_music_index]]);
 //        HAL_Delay(200);
 //    }
+//    fan_init(&motor0, &htim2, TIM_CHANNEL_1, TIM_CHANNEL_2);
+//    fan_init(&motor1, &htim3, TIM_CHANNEL_3, TIM_CHANNEL_4);
 
+    UI_show();
+    tick = HAL_GetTick();
+    icm20948_init();
+    ak09916_init();
+    HAL_TIM_Base_Start_IT(&htim4);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -192,8 +212,6 @@ int main(void)
   {
       UI_show();
       UI_key_process();
-//      uint32_t perf_start_time = HAL_GetTick();
-//          IRTM_Send(&irtm, KEY_3);
 
     /* USER CODE END WHILE */
 

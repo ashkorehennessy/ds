@@ -32,6 +32,7 @@
 #include "PID.h"
 #include "sercom.h"
 #include "tfluna_i2c.h"
+#include "icm20948.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -79,6 +80,9 @@ extern int16_t  tfFlux  ;   // signal quality in arbitrary units
 extern int16_t  tfTemp  ;   // temperature in 0.01 degree Celsius
 extern double fan_speed;
 extern float pidout;
+extern axises my_gyro;
+extern axises my_accel;
+extern axises my_mag;
 /* USER CODE END EV */
 
 /******************************************************************************/
@@ -220,20 +224,6 @@ void SysTick_Handler(void)
 /******************************************************************************/
 
 /**
-  * @brief This function handles EXTI line4 interrupt.
-  */
-void EXTI4_IRQHandler(void)
-{
-  /* USER CODE BEGIN EXTI4_IRQn 0 */
-    IR_exti_callback(&ir);
-  /* USER CODE END EXTI4_IRQn 0 */
-  HAL_GPIO_EXTI_IRQHandler(GuangDian0_Pin);
-  /* USER CODE BEGIN EXTI4_IRQn 1 */
-
-  /* USER CODE END EXTI4_IRQn 1 */
-}
-
-/**
   * @brief This function handles TIM1 update interrupt.
   */
 void TIM1_UP_IRQHandler(void)
@@ -267,6 +257,11 @@ void TIM1_CC_IRQHandler(void)
 void TIM4_IRQHandler(void)
 {
   /* USER CODE BEGIN TIM4_IRQn 0 */
+    HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_SET);
+    icm20948_gyro_read_dps(&my_gyro);
+    icm20948_accel_read_g(&my_accel);
+//    ak09916_mag_read_uT(&my_mag);
+    HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET);
   /* USER CODE END TIM4_IRQn 0 */
   HAL_TIM_IRQHandler(&htim4);
   /* USER CODE BEGIN TIM4_IRQn 1 */
